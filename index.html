@@ -1,1668 +1,1689 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Melodix v4 — The Gritty Update</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<title>CodeQuest</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:       #0a0a0f;
-  --surface:  #11111a;
-  --surface2: #181825;
-  --border:   #2a2a3d;
-  --accent:   #7c3aed;
-  --accent2:  #a855f7;
-  --accent3:  #c084fc;
-  --green:    #22c55e;
-  --red:      #ef4444;
-  --amber:    #f59e0b;
-  --cyan:     #06b6d4;
-  --text:     #e2e8f0;
-  --muted:    #64748b;
-  --mono:     'Space Mono', monospace;
-  --display:  'Syne', sans-serif;
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #07070f;
+  --s1: #0e0e1c;
+  --s2: #141428;
+  --bd: #1e1e38;
+  --g: #00ff88;
+  --g2: #00cc66;
+  --r: #ff3355;
+  --y: #ffaa00;
+  --b: #4488ff;
+  --p: #aa44ff;
+  --tx: #c8d8e8;
+  --mu: #445566;
+  --mono: 'JetBrains Mono', monospace;
+  --ui: 'Syne', sans-serif;
+}
+body { background: var(--bg); color: var(--tx); font-family: var(--mono); height: 100vh; overflow: hidden; }
+
+/* ── SCREENS ── */
+.scr { display: none; height: 100vh; flex-direction: column; }
+.scr.on { display: flex; }
+
+/* ── BOOT ── */
+#boot { align-items: center; justify-content: center; background: var(--bg); }
+.terminal {
+  width: min(640px, 94vw);
+  background: var(--s1); border: 1px solid var(--g);
+  border-radius: 4px; padding: 2rem;
+  box-shadow: 0 0 40px rgba(0,255,136,.12);
+}
+#boot-log { min-height: 160px; margin-bottom: 1.5rem; }
+.bl { font-size: .78rem; margin-bottom: .25rem; color: var(--g); }
+.bl.dim { color: var(--mu); }
+.bl.warn { color: var(--y); }
+.bl.err { color: var(--r); }
+.logo-txt {
+  font-family: var(--ui); font-size: 2.2rem; font-weight: 800;
+  color: var(--g); text-align: center; margin-bottom: .3rem;
+  text-shadow: 0 0 24px rgba(0,255,136,.4);
+}
+.logo-sub { text-align: center; color: var(--mu); font-size: .7rem; letter-spacing: .2em; margin-bottom: 1.5rem; }
+#boot-btn {
+  display: block; width: 100%; padding: .9rem;
+  background: none; border: 1px solid var(--g); color: var(--g);
+  cursor: pointer; font-family: var(--mono); font-size: .85rem;
+  letter-spacing: .12em; text-align: center; transition: all .2s;
+}
+#boot-btn:hover { background: rgba(0,255,136,.08); }
+
+/* ── MAP ── */
+#map { background: var(--bg); padding: 1rem; overflow-y: auto; }
+.map-top {
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  background: var(--s1); border: 1px solid var(--bd); border-radius: 4px;
+  padding: .6rem 1rem; margin-bottom: 1rem;
+}
+.map-logo { font-family: var(--ui); font-size: 1rem; font-weight: 800; color: var(--g); }
+.hud { font-size: .72rem; }
+.hud span { color: var(--g); font-weight: 700; }
+.hearts { display: inline-flex; gap: 2px; }
+.ht { color: var(--r); font-size: .85rem; }
+.ht.off { opacity: .2; }
+.map-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .6rem;
+}
+.card {
+  background: var(--s1); border: 1px solid var(--bd); border-radius: 6px;
+  padding: 1rem; cursor: pointer; transition: all .2s; position: relative;
+}
+.card:hover:not(.locked) { border-color: var(--g); box-shadow: 0 0 12px rgba(0,255,136,.1); }
+.card.done { border-color: rgba(0,255,136,.35); background: rgba(0,255,136,.03); }
+.card.locked { opacity: .3; cursor: default; }
+.card.next { border-color: var(--y); }
+.c-lang { font-size: .58rem; font-weight: 700; letter-spacing: .12em; margin-bottom: .4rem; }
+.c-lang.html { color: var(--y); }
+.c-lang.css  { color: var(--b); }
+.c-lang.js   { color: var(--p); }
+.c-lang.py   { color: var(--g); }
+.c-lang.cpp  { color: var(--r); }
+.c-title { font-size: .8rem; font-weight: 700; color: var(--tx); margin-bottom: .2rem; }
+.c-sub { font-size: .65rem; color: var(--mu); }
+.c-done-badge {
+  position: absolute; top: 8px; right: 8px;
+  font-size: .6rem; color: var(--g); background: rgba(0,255,136,.12);
+  padding: 1px 5px; border-radius: 3px;
+}
+.diff-dots { display: flex; gap: 3px; margin-top: .5rem; }
+.dd { width: 6px; height: 6px; border-radius: 50%; background: var(--bd); }
+.dd.on { background: var(--y); }
+
+/* ── GAME ── */
+#game { display: none; flex-direction: row; }
+#game.on { display: flex; }
+.gl { display: flex; flex-direction: column; flex: 1; min-width: 0; border-right: 1px solid var(--bd); }
+.gr { display: flex; flex-direction: column; width: 380px; min-width: 280px; background: var(--s1); }
+
+/* topbar */
+.gtop {
+  height: 46px; background: var(--s1); border-bottom: 1px solid var(--bd);
+  display: flex; align-items: center; padding: 0 10px; gap: 8px; flex-shrink: 0;
+}
+.back-btn {
+  padding: 3px 9px; border: 1px solid var(--bd); background: none;
+  color: var(--mu); cursor: pointer; font-family: var(--mono); font-size: .68rem;
+  border-radius: 3px; transition: all .15s;
+}
+.back-btn:hover { color: var(--tx); border-color: var(--tx); }
+.g-badge {
+  font-size: .6rem; font-weight: 700; padding: 2px 7px; border-radius: 3px;
+}
+.g-title { font-size: .75rem; font-weight: 700; color: var(--tx); }
+.g-right-hud { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.g-score { font-size: .7rem; color: var(--g); }
+.g-hearts { display: flex; gap: 2px; }
+.g-ht { font-size: .8rem; color: var(--r); }
+.g-ht.off { opacity: .2; }
+.g-timer { font-size: .9rem; font-weight: 700; color: var(--y); min-width: 38px; text-align: right; }
+.g-timer.danger { color: var(--r); animation: blink .5s infinite; }
+@keyframes blink { 0%,100% { opacity:1 } 50% { opacity:.3 } }
+
+/* story bar */
+.story-bar {
+  padding: 8px 12px; background: var(--s2); border-bottom: 1px solid var(--bd);
+  flex-shrink: 0; display: flex; gap: 12px; align-items: flex-start;
+}
+.story-left { flex: 1; }
+.story-alert { font-size: .68rem; color: var(--y); font-weight: 700; margin-bottom: 2px; }
+.story-txt { font-size: .68rem; color: var(--mu); line-height: 1.5; }
+.story-obj {
+  font-size: .66rem; color: var(--g); flex-shrink: 0; max-width: 200px;
+  background: rgba(0,255,136,.05); border: 1px solid rgba(0,255,136,.18);
+  border-radius: 4px; padding: 5px 8px; line-height: 1.5;
 }
 
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--display);}
-
-/* ── LAYOUT ── */
-.app{display:grid;grid-template-rows:56px 1fr 180px;height:100vh;gap:0}
-
-/* ── TOPBAR ── */
-.topbar{
-  background:var(--surface);
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:1rem;padding:0 1.2rem;
-  position:relative;z-index:10;
+/* code area */
+.code-hdr {
+  height: 30px; background: var(--s1); border-bottom: 1px solid var(--bd);
+  display: flex; align-items: center; padding: 0 10px; gap: 8px; flex-shrink: 0;
 }
-.logo{font-size:1.2rem;font-weight:800;letter-spacing:-.02em;color:var(--accent3);margin-right:.5rem;}
-.logo span{color:var(--muted);font-weight:400}
-.logo sup{font-size:.55rem;color:var(--red);vertical-align:super;letter-spacing:.05em;}
-
-#bass-pulse{
-  position:absolute;inset:0;pointer-events:none;z-index:0;
-  opacity:.55;
+.fname { font-size: .65rem; color: var(--mu); background: var(--s2); padding: 1px 7px; border-radius: 3px; border: 1px solid var(--bd); }
+.bug-badge { font-size: .6rem; color: var(--r); background: rgba(255,51,85,.12); border: 1px solid rgba(255,51,85,.25); padding: 1px 6px; border-radius: 3px; }
+.line-info { margin-left: auto; font-size: .6rem; color: var(--mu); }
+.editor-wrap { flex: 1; display: flex; overflow: hidden; }
+.lnums {
+  background: #030308; padding: 10px 8px 10px 6px; font-size: .78rem;
+  line-height: 1.75; color: var(--mu); text-align: right; user-select: none;
+  border-right: 1px solid var(--bd); flex-shrink: 0; overflow: hidden; min-width: 36px;
+  white-space: pre;
 }
-
-.tb-sep{width:1px;height:24px;background:var(--border);margin:0 .3rem}
-
-.btn{
-  padding:.38rem .85rem;border-radius:5px;border:none;cursor:pointer;
-  font-family:var(--display);font-size:.78rem;font-weight:700;letter-spacing:.04em;
-  transition:all .15s;display:flex;align-items:center;gap:.4rem;
+#ged {
+  flex: 1; background: #030308; color: var(--tx); border: none; outline: none;
+  resize: none; font-family: var(--mono); font-size: .78rem; line-height: 1.75;
+  padding: 10px 12px; tab-size: 2; caret-color: var(--g);
 }
-.btn-play{background:var(--green);color:#fff;}
-.btn-play:hover{filter:brightness(1.15);}
-.btn-stop{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
-.btn-stop:hover{border-color:var(--muted);}
-.btn-clear{background:var(--surface2);color:var(--red);border:1px solid var(--border);}
-.btn-clear:hover{border-color:var(--red);}
-.btn-export{background:var(--accent);color:#fff;}
-.btn-export:hover{background:var(--accent2);}
-.btn-generate{background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;box-shadow:0 0 12px rgba(124,58,237,.4);}
-.btn-generate:hover{filter:brightness(1.15);box-shadow:0 0 18px rgba(124,58,237,.6);}
-.btn-generate-rhythm{background:linear-gradient(135deg,#d97706,#ef4444);color:#fff;}
-.btn-generate-rhythm:hover{filter:brightness(1.12);}
-.btn-random{background:linear-gradient(135deg,#0891b2,#7c3aed,#db2777);background-size:200%;color:#fff;animation:randShift 3s linear infinite;}
-.btn-random:hover{filter:brightness(1.2);transform:scale(1.04);}
-@keyframes randShift{0%{background-position:0%}100%{background-position:200%}}
+.code-foot {
+  height: 36px; background: var(--s1); border-top: 1px solid var(--bd);
+  display: flex; align-items: center; padding: 0 10px; gap: 6px; flex-shrink: 0;
+}
+.fb {
+  padding: 3px 9px; border: 1px solid var(--bd); background: none;
+  color: var(--mu); cursor: pointer; font-family: var(--mono);
+  font-size: .65rem; border-radius: 3px; transition: all .15s;
+}
+.fb:hover { border-color: var(--y); color: var(--y); }
+.fb.run { background: var(--g); color: #000; border-color: var(--g); font-weight: 700; }
+.fb.run:hover { background: var(--g2); }
 
-.tb-label{font-size:.7rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
-.tb-val{font-family:var(--mono);font-size:.85rem;color:var(--accent3);}
+/* right panel */
+.rtabs { display: flex; border-bottom: 1px solid var(--bd); flex-shrink: 0; }
+.rtab {
+  flex: 1; padding: 8px 0; border: none; background: none; color: var(--mu);
+  cursor: pointer; font-family: var(--mono); font-size: .65rem;
+  border-bottom: 2px solid transparent; transition: all .15s;
+}
+.rtab.on { color: var(--g); border-bottom-color: var(--g); }
+.rpanel { flex: 1; overflow: hidden; display: none; flex-direction: column; }
+.rpanel.on { display: flex; }
+#gprev { flex: 1; border: none; background: #fff; }
+#gcon { flex: 1; overflow-y: auto; padding: 8px 10px; font-size: .73rem; }
+#gcon::-webkit-scrollbar { width: 3px; }
+#gcon::-webkit-scrollbar-thumb { background: var(--bd); }
+.cl { padding: 1px 0; }
+.cl.ok { color: var(--g); }
+.cl.er { color: var(--r); }
+.cl.inf { color: var(--b); }
+.cl.wa { color: var(--y); }
+.cempty { color: var(--mu); padding: 2rem; text-align: center; font-size: .72rem; }
+#gexp { flex: 1; overflow-y: auto; padding: 10px 12px; }
+#gexp::-webkit-scrollbar { width: 3px; }
+.es { margin-bottom: 14px; }
+.el { font-size: .58rem; letter-spacing: .15em; text-transform: uppercase; color: var(--g); margin-bottom: 5px; }
+.et { font-size: .73rem; color: rgba(200,216,232,.72); line-height: 1.65; }
+.wc { background: rgba(170,68,255,.07); border: 1px solid rgba(170,68,255,.2); border-radius: 5px; padding: 8px 10px; margin: 6px 0; }
+.wq { font-size: .62rem; color: var(--p); font-weight: 700; margin-bottom: 3px; }
+.wa2 { font-size: .71rem; color: rgba(200,216,232,.68); line-height: 1.6; }
+.ec { background: rgba(0,0,0,.4); border: 1px solid var(--bd); border-radius: 3px; padding: 7px 9px; margin: 5px 0; font-size: .7rem; color: var(--g); white-space: pre-wrap; overflow-x: auto; }
 
-input[type=range]{
-  -webkit-appearance:none;appearance:none;
-  height:3px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;width:80px;
-}
-input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
-  background:var(--accent2);cursor:pointer;
-}
+/* result overlay */
+#res-overlay { display: none; position: fixed; inset: 0; background: rgba(4,4,12,.9); z-index: 900; align-items: center; justify-content: center; }
+#res-overlay.on { display: flex; }
+.res-box { background: var(--s2); border: 1px solid var(--bd); border-radius: 8px; padding: 2rem; text-align: center; width: min(440px, 92vw); }
+.res-icon { font-size: 3.5rem; margin-bottom: .8rem; }
+.res-title { font-family: var(--ui); font-size: 1.5rem; font-weight: 800; margin-bottom: .4rem; }
+.res-title.win { color: var(--g); }
+.res-title.lose { color: var(--r); }
+.res-msg { font-size: .78rem; color: var(--mu); line-height: 1.6; margin-bottom: 1.2rem; }
+.res-stats { display: flex; gap: 8px; justify-content: center; margin-bottom: 1.2rem; }
+.rs { background: rgba(0,0,0,.3); padding: .7rem 1rem; border-radius: 5px; text-align: center; }
+.rs-v { font-size: 1.3rem; font-weight: 700; color: var(--g); display: block; }
+.rs-v.red { color: var(--r); }
+.rs-l { font-size: .58rem; color: var(--mu); letter-spacing: .1em; text-transform: uppercase; }
+.res-btns { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; }
+.rb { padding: .55rem 1.2rem; border-radius: 4px; cursor: pointer; font-family: var(--mono); font-size: .75rem; }
+.rb.p { background: var(--g); color: #000; border: none; font-weight: 700; }
+.rb.p:hover { background: var(--g2); }
+.rb.s { background: none; border: 1px solid var(--bd); color: var(--tx); }
+.rb.s:hover { border-color: var(--tx); }
 
-select{
-  background:var(--surface2);color:var(--text);border:1px solid var(--border);
-  border-radius:5px;padding:.35rem .6rem;font-family:var(--display);font-size:.78rem;
-  cursor:pointer;outline:none;
+/* hint popup */
+.hint-pop {
+  position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%);
+  background: rgba(255,170,0,.1); border: 1px solid var(--y); color: var(--y);
+  padding: .7rem 1.2rem; border-radius: 5px; font-size: .75rem;
+  max-width: 500px; text-align: center; z-index: 500;
+  animation: slideUp .3s ease; pointer-events: none;
 }
-select:focus{border-color:var(--accent);}
+@keyframes slideUp { from { opacity:0;transform:translateX(-50%) translateY(8px) } to { opacity:1;transform:translateX(-50%) translateY(0) } }
 
-.play-head{
-  width:10px;height:10px;border-radius:50%;background:var(--green);
-  box-shadow:0 0 8px var(--green);animation:pulse-dot 1s infinite;
-  display:none;
+.toast-msg {
+  position: fixed; top: 56px; right: 16px; z-index: 600;
+  padding: .5rem 1rem; border-radius: 4px; font-size: .72rem; pointer-events: none;
+  animation: toastIn .3s ease;
 }
-.play-head.active{display:block;}
-@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+.toast-msg.g { background: rgba(0,255,136,.12); border: 1px solid var(--g); color: var(--g); }
+.toast-msg.r { background: rgba(255,51,85,.12); border: 1px solid var(--r); color: var(--r); }
+@keyframes toastIn { from { opacity:0;transform:translateX(12px) } to { opacity:1;transform:translateX(0) } }
 
-.beat-display{
-  font-family:var(--mono);font-size:.85rem;color:var(--amber);
-  min-width:40px;text-align:center;
-}
-
-/* ── PIANO ROLL ── */
-.piano-roll-wrap{
-  display:flex;overflow:hidden;position:relative;
-  background:var(--bg);
-}
-
-.piano-keys{
-  width:52px;flex-shrink:0;
-  background:var(--surface);
-  border-right:1px solid var(--border);
-  overflow-y:hidden;
-}
-.key{
-  height:28px;display:flex;align-items:center;justify-content:flex-end;
-  padding-right:6px;border-bottom:1px solid var(--border);
-  font-size:.62rem;font-family:var(--mono);color:var(--muted);
-  user-select:none;position:relative;cursor:pointer;transition:background .1s;
-}
-.key.white{background:var(--surface);}
-.key.black{background:#0d0d14;color:#555;}
-.key.white:hover{background:var(--surface2);}
-.key.black:hover{background:#151520;}
-.key.playing{background:var(--accent) !important;color:#fff !important;}
-.key-c{color:var(--accent3) !important;}
-
-.grid-scroll{flex:1;overflow-x:auto;overflow-y:hidden;position:relative;}
-.grid-inner{position:relative;}
-
-canvas#grid{display:block;cursor:crosshair;}
-
-/* playhead line */
-.playhead-line{
-  position:absolute;top:0;bottom:0;width:2px;
-  background:var(--green);box-shadow:0 0 8px var(--green);
-  pointer-events:none;z-index:5;opacity:0;transition:opacity .1s;
-}
-.playhead-line.active{opacity:1;}
-
-/* ── BOTTOM — INSTRUMENTS + RHYTHM ── */
-.bottom{
-  background:var(--surface);
-  border-top:1px solid var(--border);
-  display:grid;grid-template-columns:180px 1fr 1fr;
-  overflow:hidden;
-}
-
-/* Instrument panel */
-.instrument-panel{
-  border-right:1px solid var(--border);
-  padding:.8rem;overflow-y:auto;
-}
-
-/* Genre panel */
-.genre-panel{
-  border-right:1px solid var(--border);
-  padding:.8rem;overflow-y:auto;
-}
-.genre-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));
-  gap:5px;
-}
-.genre-btn{
-  padding:.45rem .3rem;border-radius:6px;border:1px solid var(--border);
-  background:var(--surface2);cursor:pointer;
-  font-family:var(--display);font-size:.68rem;font-weight:700;
-  color:var(--muted);transition:all .18s;text-align:center;
-  display:flex;flex-direction:column;align-items:center;gap:2px;
-  line-height:1.2;
-}
-.genre-btn:hover{border-color:var(--accent2);color:var(--text);background:var(--surface);}
-.genre-btn.active{border-color:var(--accent);background:var(--accent);color:#fff;box-shadow:0 0 10px rgba(124,58,237,.45);}
-.genre-btn .g-emoji{font-size:1.1rem;}
-.genre-btn .g-bpm{font-size:.58rem;color:inherit;opacity:.7;font-family:var(--mono);}
-.genre-btn.active .g-bpm{opacity:.85;}
-.panel-title{font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.7rem;}
-.inst-btn{
-  width:100%;text-align:left;padding:.45rem .7rem;border-radius:5px;border:none;cursor:pointer;
-  font-family:var(--display);font-size:.8rem;font-weight:700;
-  background:transparent;color:var(--muted);margin-bottom:.25rem;transition:all .15s;
-  display:flex;align-items:center;gap:.5rem;
-}
-.inst-btn:hover{background:var(--surface2);color:var(--text);}
-.inst-btn.active{background:var(--accent);color:#fff;}
-.inst-dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0;}
-
-/* Rhythm machine */
-.rhythm-panel{padding:1rem;overflow-x:auto;}
-.rhythm-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;}
-.rhythm-label{font-size:.68rem;font-family:var(--mono);color:var(--muted);width:52px;flex-shrink:0;text-align:right;}
-.rhythm-steps{display:flex;gap:3px;}
-.step-btn{
-  width:22px;height:22px;border-radius:3px;border:none;cursor:pointer;
-  background:var(--surface2);border:1px solid var(--border);
-  transition:all .1s;position:relative;
-}
-.step-btn:hover{border-color:var(--muted);}
-.step-btn.on{background:var(--accent2);border-color:var(--accent);box-shadow:0 0 6px rgba(168,85,247,.4);}
-.step-btn.beat4{border-left:2px solid var(--border)!important;}
-.step-btn.current{box-shadow:0 0 0 2px var(--amber)!important;}
-
-.rhythm-vol{width:55px;}
+.flash-g { animation: fg .4s ease; }
+.flash-r { animation: fr .4s ease; }
+@keyframes fg { 0%,100% { box-shadow:none } 50% { box-shadow: 0 0 40px rgba(0,255,136,.4) inset; } }
+@keyframes fr { 0%,100% { box-shadow:none } 50% { box-shadow: 0 0 40px rgba(255,51,85,.4) inset; } }
 </style>
 </head>
 <body>
-<div class="app">
 
-<!-- TOPBAR -->
-<div class="topbar">
-  <div class="logo">Melodix <span>studio</span><sup>v4</sup></div>
-  <div class="tb-sep"></div>
-  <button class="btn btn-play" id="btn-play" onclick="togglePlay()">▶ Play</button>
-  <button class="btn btn-stop" onclick="stopAll()">■ Stop</button>
-  <div class="tb-sep"></div>
-  <div>
-    <div class="tb-label">BPM</div>
-    <div style="display:flex;align-items:center;gap:.4rem">
-      <input type="range" id="bpm-slider" min="40" max="200" value="100" oninput="setBPM(this.value)"/>
-      <span class="tb-val" id="bpm-display">100</span>
-    </div>
-  </div>
-  <div class="tb-sep"></div>
-  <div>
-    <div class="tb-label">Bars</div>
-    <select id="bars-select" onchange="setBars(this.value)">
-      <option value="2">2</option>
-      <option value="4" selected>4</option>
-      <option value="8">8</option>
-      <option value="16">16</option>
-    </select>
-  </div>
-  <div class="tb-sep"></div>
-  <div>
-    <div class="tb-label">Octavă</div>
-    <div style="display:flex;align-items:center;gap:.3rem">
-      <button class="btn btn-stop" style="padding:.3rem .6rem" onclick="shiftOctave(-1)">−</button>
-      <span class="tb-val" id="oct-display">4</span>
-      <button class="btn btn-stop" style="padding:.3rem .6rem" onclick="shiftOctave(1)">+</button>
-    </div>
-  </div>
-  <div class="tb-sep"></div>
-  <div>
-    <div class="tb-label">Volume</div>
-    <input type="range" id="vol-slider" min="0" max="100" value="70" oninput="setMasterVol(this.value)"/>
-  </div>
-  <div class="tb-sep"></div>
-  <div class="play-head" id="play-dot"></div>
-  <span class="beat-display" id="beat-display">1.1</span>
-  <div style="margin-left:auto;display:flex;gap:.5rem;align-items:center">
-    <div>
-      <div class="tb-label">Scală</div>
-      <select id="scale-select">
-        <option value="major">Major</option>
-        <option value="minor" selected>Minor</option>
-        <option value="pentatonic">Pentatonic</option>
-        <option value="blues">Blues</option>
-        <option value="dorian">Dorian</option>
-        <option value="phrygian">Phrygian</option>
-        <option value="lydian">Lydian</option>
-        <option value="mixolydian">Mixolydian</option>
-      </select>
-    </div>
-    <div>
-      <div class="tb-label">Tonică</div>
-      <select id="root-select">
-        <option value="0">C</option><option value="1">C#</option>
-        <option value="2">D</option><option value="3">D#</option>
-        <option value="4">E</option><option value="5">F</option>
-        <option value="6">F#</option><option value="7">G</option>
-        <option value="8">G#</option><option value="9">A</option>
-        <option value="10">A#</option><option value="11">B</option>
-      </select>
-    </div>
-    <div>
-      <div class="tb-label">Stil</div>
-      <select id="style-select">
-        <option value="melodic">Melodic</option>
-        <option value="arpeggio">Arpeggio</option>
-        <option value="stepwise">Stepwise</option>
-        <option value="sparse">Sparse</option>
-        <option value="dense">Dense</option>
-      </select>
-    </div>
-    <div class="tb-sep"></div>
-    <button class="btn btn-generate" onclick="generateMelody()">✦ Generate</button>
-    <button class="btn btn-generate-rhythm" onclick="generateRhythm()">🥁 Rhythm</button>
-    <button class="btn btn-random" onclick="randomEverything()">🎲 Random</button>
-    <div class="tb-sep"></div>
-    <button class="btn btn-clear" onclick="clearAll()">✕ Clear</button>
-    <button class="btn btn-export" onclick="exportMIDI()">⬇ Export</button>
+<!-- BOOT -->
+<div class="scr on" id="boot">
+  <div class="terminal">
+    <div id="boot-log"></div>
+    <div class="logo-txt">CodeQuest</div>
+    <div class="logo-sub">HACK THE SYSTEM &bull; LEARN BY BREAKING THINGS</div>
+    <button id="boot-btn" onclick="goMap()" style="display:none">[ PORNESTE SISTEMUL ]</button>
   </div>
 </div>
 
-<!-- PIANO ROLL -->
-<div class="piano-roll-wrap" id="roll-wrap">
-  <canvas id="bass-pulse"></canvas>
-  <div class="piano-keys" id="piano-keys"></div>
-  <div class="grid-scroll" id="grid-scroll">
-    <div class="grid-inner" id="grid-inner">
-      <canvas id="grid"></canvas>
-      <div class="playhead-line" id="playhead-line"></div>
+<!-- MAP -->
+<div class="scr" id="map">
+  <div class="map-top">
+    <span class="map-logo">&#11042; CodeQuest</span>
+    <span class="hud">SCOR <span id="map-score">0</span></span>
+    <span class="hud">VIETI <span class="hearts" id="map-hearts"></span></span>
+    <span class="hud" style="margin-left:auto">COMPLETAT <span id="map-prog">0/0</span></span>
+  </div>
+  <div style="text-align:center;font-size:.62rem;letter-spacing:.2em;color:var(--mu);margin-bottom:.6rem;text-transform:uppercase">&#9656; Selecteaza o misiune &#9666;</div>
+  <div class="map-grid" id="map-grid"></div>
+</div>
+
+<!-- GAME -->
+<div class="scr" id="game">
+  <div class="gl">
+    <!-- topbar -->
+    <div class="gtop">
+      <button class="back-btn" onclick="goMap()">&#8592; Harta</button>
+      <span class="g-badge" id="g-badge">HTML</span>
+      <span class="g-title" id="g-title">-</span>
+      <div class="g-right-hud">
+        <span class="g-score" id="g-score">0 pts</span>
+        <div class="g-hearts" id="g-hearts"></div>
+        <span class="g-timer" id="g-timer">-</span>
+      </div>
+    </div>
+    <!-- story -->
+    <div class="story-bar">
+      <div class="story-left">
+        <div class="story-alert">&#9888; SITUATIE CRITICA</div>
+        <div class="story-txt" id="g-story">-</div>
+      </div>
+      <div class="story-obj" id="g-obj">-</div>
+    </div>
+    <!-- code header -->
+    <div class="code-hdr">
+      <span class="fname" id="g-fname">main.html</span>
+      <span class="bug-badge" id="g-bugs">0 bug-uri</span>
+      <span class="line-info" id="g-lines">0 linii</span>
+    </div>
+    <!-- editor -->
+    <div class="editor-wrap">
+      <div class="lnums" id="lnums">1</div>
+      <textarea id="ged" spellcheck="false" oninput="edChange()" onkeydown="edKey(event)"></textarea>
+    </div>
+    <!-- footer -->
+    <div class="code-foot">
+      <button class="fb" onclick="doHint()">&#128161; Hint</button>
+      <button class="fb" onclick="doShowCode()">&#128065; Cod corect</button>
+      <button class="fb" onclick="doReset()">&#8635; Reset</button>
+      <button class="fb" onclick="doExplain()">&#128269; De ce?</button>
+      <button class="fb run" onclick="doRun()">&#9654; Run &amp; Check</button>
     </div>
   </div>
-</div>
-
-<!-- BOTTOM -->
-<div class="bottom">
-  <!-- Instruments -->
-  <div class="instrument-panel">
-    <div class="panel-title">Instrument melodic</div>
-    <div id="inst-list"></div>
-  </div>
-
-  <!-- GENRE PICKER -->
-  <div class="genre-panel">
-    <div class="panel-title">Gen muzical — one-click generate</div>
-    <div class="genre-grid" id="genre-grid"></div>
-  </div>
-
-  <!-- Rhythm machine -->
-  <div class="rhythm-panel">
-    <div class="panel-title" style="margin-bottom:.5rem">Rhythm Machine — 16 pași</div>
-    <div id="rhythm-rows"></div>
+  <!-- right panel -->
+  <div class="gr">
+    <div class="rtabs">
+      <button class="rtab on" onclick="showRtab('prev',this)">Preview</button>
+      <button class="rtab" onclick="showRtab('con',this)">Console</button>
+      <button class="rtab" onclick="showRtab('exp',this)">De ce?</button>
+    </div>
+    <div class="rpanel on" id="rp-prev"><iframe id="gprev" sandbox="allow-scripts allow-same-origin"></iframe></div>
+    <div class="rpanel" id="rp-con"><div id="gcon"><div class="cempty">// apasa Run &amp; Check</div></div></div>
+    <div class="rpanel" id="rp-exp"><div id="gexp"><div class="cempty">// apasa "De ce?" dupa ce rulezi</div></div></div>
   </div>
 </div>
 
-</div><!-- /app -->
+<!-- RESULT -->
+<div id="res-overlay">
+  <div class="res-box">
+    <div class="res-icon" id="ri"></div>
+    <div class="res-title" id="rt"></div>
+    <div class="res-msg" id="rm"></div>
+    <div class="res-stats" id="rs"></div>
+    <div class="res-btns" id="rb"></div>
+  </div>
+</div>
 
 <script>
-// ══════════════════════════════════════════════════════════
-//  WEB AUDIO SETUP
-// ══════════════════════════════════════════════════════════
-const AC   = new (window.AudioContext || window.webkitAudioContext)();
-const masterGain = AC.createGain();
-masterGain.gain.value = 0.7;
-masterGain.connect(AC.destination);
+// =====================================================
+//  MISSIONS DATA
+// =====================================================
+var M = [];
 
-function setMasterVol(v){ masterGain.gain.value = v/100; }
-
-// ── NOTE FREQUENCIES ──────────────────────────────────────
-function noteFreq(midi){ return 440 * Math.pow(2, (midi - 69) / 12); }
-
-// ══════════════════════════════════════════════════════════
-//  v4: HUMANIZATION + SWING CONFIG
-// ══════════════════════════════════════════════════════════
-let humanize = {
-  active:   false,       // activat de gen (hiphop, jazz)
-  swing:    0,           // 0..0.08 sec — swing offset pe 16th impar
-  velRand:  0,           // 0..0.35 — velocity randomness
-  timingMs: 0,           // max ms offset aleatoriuq
-};
-let portamento = {
-  active: false,         // manele mode
-  time:   0.10,          // glide time în secunde
-  lastFreq: 0,
-};
-let use808 = false;      // trap/drill mode
-let last808Freq = 0;     // pentru slide 808
-
-// Aplică humanization pe when + gain
-function humanWhen(when, colIdx){
-  if(!humanize.active) return when;
-  // Swing: coloana impară (off-beat) se întârzie
-  const swingOffset = (colIdx % 2 === 1) ? humanize.swing : 0;
-  const timingJitter = (Math.random()*2-1) * (humanize.timingMs/1000);
-  return when + swingOffset + timingJitter;
-}
-function humanGain(baseGain){
-  if(!humanize.active) return baseGain;
-  return baseGain * (1 - Math.random() * humanize.velRand);
-}
-
-// ══════════════════════════════════════════════════════════
-//  INSTRUMENTS
-// ══════════════════════════════════════════════════════════
-const INSTRUMENTS = [
-  { name:'Piano',     color:'#7c3aed', synth: synthPiano    },
-  { name:'E.Piano',   color:'#2563eb', synth: synthEPiano   },
-  { name:'Synth Lead',color:'#db2777', synth: synthLead     },
-  { name:'Pad',       color:'#0891b2', synth: synthPad      },
-  { name:'Bass',      color:'#16a34a', synth: synthBass     },
-  { name:'Pluck',     color:'#d97706', synth: synthPluck    },
-  { name:'Flute',     color:'#7c3aed', synth: synthFlute    },
-  { name:'Strings',   color:'#be123c', synth: synthStrings  },
-  { name:'808 Sub',   color:'#ef4444', synth: synth808      },
-  { name:'Klapa 🌙',  color:'#f59e0b', synth: synthKlapa    },
-];
-let currentInst = 0;
-
-function synthPiano(freq, when, dur, gain=1, col=0){
-  const w=humanWhen(when,col), g2=humanGain(gain);
-  const o=AC.createOscillator(), g=AC.createGain();
-  o.type='triangle'; o.frequency.value=freq;
-  g.gain.setValueAtTime(0.6*g2,w);
-  g.gain.exponentialRampToValueAtTime(0.001,w+Math.min(dur+0.5,2));
-  o.connect(g);g.connect(masterGain);o.start(w);o.stop(w+Math.min(dur+0.6,2.2));
-}
-function synthEPiano(freq, when, dur, gain=1, col=0){
-  const w=humanWhen(when,col), g2=humanGain(gain);
-  const o1=AC.createOscillator(),o2=AC.createOscillator(),g=AC.createGain();
-  o1.type='sine';o1.frequency.value=freq;
-  o2.type='sine';o2.frequency.value=freq*2.756;
-  const gm=AC.createGain();gm.gain.value=0.25;
-  g.gain.setValueAtTime(0.5*g2,w);
-  g.gain.exponentialRampToValueAtTime(0.001,w+Math.min(dur+0.8,2.5));
-  o1.connect(g);o2.connect(gm);gm.connect(g);g.connect(masterGain);
-  o1.start(w);o2.start(w);o1.stop(w+Math.min(dur+1,2.8));o2.stop(w+Math.min(dur+1,2.8));
-}
-function synthLead(freq, when, dur, gain=1, col=0){
-  const w=humanWhen(when,col), g2=humanGain(gain);
-  const o=AC.createOscillator(),f=AC.createBiquadFilter(),g=AC.createGain();
-  o.type='sawtooth';o.frequency.value=freq;
-  f.type='lowpass';f.frequency.value=2200;f.Q.value=4;
-  g.gain.setValueAtTime(0.5*g2,w);g.gain.setValueAtTime(0.5*g2,w+dur*0.8);
-  g.gain.exponentialRampToValueAtTime(0.001,w+dur+0.05);
-  o.connect(f);f.connect(g);g.connect(masterGain);o.start(w);o.stop(w+dur+0.1);
-}
-function synthPad(freq, when, dur, gain=1, col=0){
-  ['sawtooth','square'].forEach((type,i)=>{
-    const o=AC.createOscillator(),g=AC.createGain(),flt=AC.createBiquadFilter();
-    o.type=type;o.frequency.value=freq*(i?1.005:1);
-    flt.type='lowpass';flt.frequency.value=900;
-    g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(0.18*gain,when+0.12);
-    g.gain.setValueAtTime(0.18*gain,when+dur-0.1);
-    g.gain.linearRampToValueAtTime(0,when+dur+0.3);
-    o.connect(flt);flt.connect(g);g.connect(masterGain);o.start(when);o.stop(when+dur+0.4);
-  });
-}
-function synthBass(freq, when, dur, gain=1, col=0){
-  const o=AC.createOscillator(),g=AC.createGain(),f=AC.createBiquadFilter();
-  o.type='sawtooth';o.frequency.value=freq/2;
-  f.type='lowpass';f.frequency.value=400;f.Q.value=6;
-  g.gain.setValueAtTime(0.8*gain,when);
-  g.gain.exponentialRampToValueAtTime(0.001,when+Math.min(dur+0.1,0.8));
-  o.connect(f);f.connect(g);g.connect(masterGain);o.start(when);o.stop(when+Math.min(dur+0.15,0.9));
-}
-function synthPluck(freq, when, dur, gain=1, col=0){
-  const bufSize=AC.sampleRate*0.5,buf=AC.createBuffer(1,bufSize,AC.sampleRate);
-  const data=buf.getChannelData(0);
-  for(let i=0;i<bufSize;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/bufSize,3);
-  const src=AC.createBufferSource(),flt=AC.createBiquadFilter(),g=AC.createGain();
-  src.buffer=buf;flt.type='bandpass';flt.frequency.value=freq;flt.Q.value=80;
-  g.gain.setValueAtTime(1.2*gain,when);
-  g.gain.exponentialRampToValueAtTime(0.001,when+Math.min(dur+0.4,1.5));
-  src.connect(flt);flt.connect(g);g.connect(masterGain);src.start(when);src.stop(when+Math.min(dur+0.5,1.6));
-}
-function synthFlute(freq, when, dur, gain=1, col=0){
-  const o=AC.createOscillator(),vib=AC.createOscillator(),vibG=AC.createGain(),g=AC.createGain();
-  o.type='sine';o.frequency.value=freq;
-  vib.type='sine';vib.frequency.value=5.5;vibG.gain.value=freq*0.012;
-  g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(0.5*gain,when+0.06);
-  g.gain.setValueAtTime(0.5*gain,when+dur-0.06);
-  g.gain.linearRampToValueAtTime(0,when+dur+0.05);
-  vib.connect(vibG);vibG.connect(o.frequency);o.connect(g);g.connect(masterGain);
-  vib.start(when);o.start(when);vib.stop(when+dur+0.1);o.stop(when+dur+0.1);
-}
-function synthStrings(freq, when, dur, gain=1, col=0){
-  ['sawtooth','sawtooth','sawtooth'].forEach((t,i)=>{
-    const o=AC.createOscillator(),g=AC.createGain(),f=AC.createBiquadFilter();
-    o.type=t;o.frequency.value=freq*[1,1.002,0.998][i];
-    f.type='lowpass';f.frequency.value=2000;
-    g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(0.15*gain,when+0.18);
-    g.gain.setValueAtTime(0.15*gain,when+dur-0.1);
-    g.gain.linearRampToValueAtTime(0,when+dur+0.25);
-    o.connect(f);f.connect(g);g.connect(masterGain);o.start(when);o.stop(when+dur+0.3);
-  });
-}
-
-// ── v4: 808 SUB-BASS ENGINE ───────────────────────────────
-function synth808(freq, when, dur, gain=1, col=0){
-  const subFreq = freq / 2;           // octava joasă
-  const slideTime = portamento.active ? portamento.time : 0.04;
-
-  // Sub oscillator cu pitch slide
-  const o1=AC.createOscillator(), o2=AC.createOscillator();
-  const distCurve = makeDistortionCurve(80);
-  const waveShape = AC.createWaveShaper();
-  waveShape.curve = distCurve;
-  waveShape.oversample = '4x';
-
-  const flt=AC.createBiquadFilter(), g=AC.createGain();
-  o1.type='sine'; o2.type='triangle';
-
-  // Slide de la nota anterioară dacă diferența > jumătate de octavă
-  const startFreq = (last808Freq && Math.abs(last808Freq-subFreq) > subFreq*0.3)
-    ? last808Freq : subFreq;
-  o1.frequency.setValueAtTime(startFreq, when);
-  o1.frequency.exponentialRampToValueAtTime(subFreq, when + slideTime);
-  o2.frequency.setValueAtTime(startFreq*2, when);
-  o2.frequency.exponentialRampToValueAtTime(subFreq*2, when + slideTime);
-  last808Freq = subFreq;
-
-  flt.type='lowpass'; flt.frequency.value=280; flt.Q.value=3;
-
-  // Sustain lung — caracteristic 808
-  const sustainDur = Math.max(dur, secPerCol()*3);
-  g.gain.setValueAtTime(0, when);
-  g.gain.linearRampToValueAtTime(1.1*gain, when+0.01);
-  g.gain.setValueAtTime(1.0*gain, when+sustainDur*0.7);
-  g.gain.exponentialRampToValueAtTime(0.001, when+sustainDur+0.15);
-
-  const gSub=AC.createGain(); gSub.gain.value=0.7;
-  const gHarm=AC.createGain(); gHarm.gain.value=0.2;
-
-  o1.connect(gSub); gSub.connect(flt);
-  o2.connect(gHarm); gHarm.connect(waveShape); waveShape.connect(flt);
-  flt.connect(g); g.connect(masterGain);
-
-  o1.start(when); o2.start(when);
-  o1.stop(when+sustainDur+0.2); o2.stop(when+sustainDur+0.2);
-
-  // Trigger bass pulse vizualizator
-  triggerBassPulse(1.0);
-}
-
-function makeDistortionCurve(amount){
-  const n=256, curve=new Float32Array(n);
-  for(let i=0;i<n;i++){
-    const x=i*2/n-1;
-    curve[i]=(Math.PI+amount)*x/(Math.PI+amount*Math.abs(x));
-  }
-  return curve;
-}
-
-// ── v4: KLAPA / MANELE SYNTH cu portamento ────────────────
-function synthKlapa(freq, when, dur, gain=1, col=0){
-  const o1=AC.createOscillator(), o2=AC.createOscillator();
-  const flt=AC.createBiquadFilter(), g=AC.createGain();
-  const vib=AC.createOscillator(), vibG=AC.createGain();
-
-  o1.type='sawtooth'; o2.type='sawtooth';
-
-  // Portamento: glide de la frecvența anterioară
-  const glideTime = portamento.active ? portamento.time : 0.01;
-  const startF = portamento.lastFreq > 0 ? portamento.lastFreq : freq;
-  o1.frequency.setValueAtTime(startF, when);
-  o1.frequency.exponentialRampToValueAtTime(freq, when+glideTime);
-  o2.frequency.setValueAtTime(startF*1.004, when);
-  o2.frequency.exponentialRampToValueAtTime(freq*1.004, when+glideTime);
-  portamento.lastFreq = freq;
-
-  // Vibrato expresiv
-  vib.type='sine'; vib.frequency.value=6.2;
-  vibG.gain.value = freq * 0.018;
-  vib.connect(vibG); vibG.connect(o1.frequency); vibG.connect(o2.frequency);
-
-  flt.type='lowpass'; flt.frequency.value=1800; flt.Q.value=3.5;
-
-  g.gain.setValueAtTime(0, when);
-  g.gain.linearRampToValueAtTime(0.55*gain, when+0.04);
-  g.gain.setValueAtTime(0.5*gain, when+dur*0.85);
-  g.gain.exponentialRampToValueAtTime(0.001, when+dur+0.08);
-
-  const gMix=AC.createGain(); gMix.gain.value=0.5;
-  o1.connect(flt); o2.connect(gMix); gMix.connect(flt); flt.connect(g); g.connect(masterGain);
-
-  vib.start(when); o1.start(when); o2.start(when);
-  vib.stop(when+dur+0.15); o1.stop(when+dur+0.15); o2.stop(when+dur+0.15);
-}
-
-// ══════════════════════════════════════════════════════════
-//  RHYTHM MACHINE
-// ══════════════════════════════════════════════════════════
-const DRUMS = [
-  { name:'Kick',   color:'#ef4444', fn: drumKick   },
-  { name:'Snare',  color:'#f59e0b', fn: drumSnare  },
-  { name:'HH',     color:'#22c55e', fn: drumHH     },
-  { name:'HH Open',color:'#06b6d4', fn: drumHHOpen },
-  { name:'Clap',   color:'#a855f7', fn: drumClap   },
-  { name:'Tom',    color:'#fb923c', fn: drumTom    },
-];
-const STEPS = 16;
-let rhythmPattern = DRUMS.map(() => new Array(STEPS).fill(false));
-let rhythmVol     = DRUMS.map(() => 0.8);
-
-function drumKick(when, vol=1){
-  const o=AC.createOscillator(),g=AC.createGain();
-  o.type='sine'; o.frequency.setValueAtTime(160,when);
-  o.frequency.exponentialRampToValueAtTime(40,when+0.08);
-  g.gain.setValueAtTime(1.2*vol,when);
-  g.gain.exponentialRampToValueAtTime(0.001,when+0.35);
-  o.connect(g);g.connect(masterGain);o.start(when);o.stop(when+0.4);
-}
-function drumSnare(when, vol=1){
-  const buf=AC.createBuffer(1,AC.sampleRate*0.2,AC.sampleRate);
-  const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
-  const src=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();
-  src.buffer=buf; f.type='highpass';f.frequency.value=1500;
-  g.gain.setValueAtTime(0.7*vol,when);g.gain.exponentialRampToValueAtTime(0.001,when+0.18);
-  src.connect(f);f.connect(g);g.connect(masterGain);src.start(when);src.stop(when+0.22);
-}
-function drumHH(when, vol=1){
-  const buf=AC.createBuffer(1,AC.sampleRate*0.05,AC.sampleRate);
-  const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
-  const src=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();
-  src.buffer=buf; f.type='highpass';f.frequency.value=8000;
-  g.gain.setValueAtTime(0.5*vol,when);g.gain.exponentialRampToValueAtTime(0.001,when+0.04);
-  src.connect(f);f.connect(g);g.connect(masterGain);src.start(when);
-}
-function drumHHOpen(when, vol=1){
-  const buf=AC.createBuffer(1,AC.sampleRate*0.4,AC.sampleRate);
-  const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
-  const src=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();
-  src.buffer=buf; f.type='highpass';f.frequency.value=7000;
-  g.gain.setValueAtTime(0.45*vol,when);g.gain.exponentialRampToValueAtTime(0.001,when+0.35);
-  src.connect(f);f.connect(g);g.connect(masterGain);src.start(when);src.stop(when+0.4);
-}
-function drumClap(when, vol=1){
-  [0,0.01,0.02].forEach(delay=>{
-    const buf=AC.createBuffer(1,AC.sampleRate*0.08,AC.sampleRate);
-    const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
-    const src=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();
-    src.buffer=buf; f.type='bandpass';f.frequency.value=1200;f.Q.value=0.5;
-    g.gain.setValueAtTime(0.55*vol,when+delay);g.gain.exponentialRampToValueAtTime(0.001,when+delay+0.1);
-    src.connect(f);f.connect(g);g.connect(masterGain);src.start(when+delay);
-  });
-}
-function drumTom(when, vol=1){
-  const o=AC.createOscillator(),g=AC.createGain();
-  o.type='sine'; o.frequency.setValueAtTime(120,when);
-  o.frequency.exponentialRampToValueAtTime(55,when+0.12);
-  g.gain.setValueAtTime(0.8*vol,when);g.gain.exponentialRampToValueAtTime(0.001,when+0.25);
-  o.connect(g);g.connect(masterGain);o.start(when);o.stop(when+0.3);
-}
-
-// ══════════════════════════════════════════════════════════
-//  PIANO ROLL STATE
-// ══════════════════════════════════════════════════════════
-const NOTE_HEIGHT = 28;
-const BEAT_WIDTH  = 60;
-let bars          = 4;
-let bpm           = 100;
-let baseOctave    = 4;
-
-// Notes stored as {row, col, len} — col & len in 16th note units
-let notes = [];
-
-// Visible note range: C2 to C7 = MIDI 36..96
-const MIDI_TOP  = 96; // C7
-const MIDI_BOT  = 36; // C2
-const NUM_ROWS  = MIDI_TOP - MIDI_BOT + 1; // 61
-
-function midiToRow(midi){ return MIDI_TOP - midi; }
-function rowToMidi(row) { return MIDI_TOP - row; }
-
-function noteLabel(midi){
-  const names = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  return names[midi%12] + Math.floor(midi/12-1);
-}
-function isBlack(midi){ return [1,3,6,8,10].includes(midi%12); }
-
-// Grid: 16th notes per bar = 4*4 = 16
-let sixteenthsPerBar = 16;
-function totalCols(){ return bars * sixteenthsPerBar; }
-function colWidth()  { return BEAT_WIDTH; }
-function gridW()     { return totalCols() * colWidth(); }
-function gridH()     { return NUM_ROWS * NOTE_HEIGHT; }
-
-// ── CANVAS ────────────────────────────────────────────────
-const canvas = document.getElementById('grid');
-const ctx    = canvas.getContext('2d');
-
-function resizeCanvas(){
-  canvas.width  = gridW();
-  canvas.height = gridH();
-  document.getElementById('grid-inner').style.width  = gridW()+'px';
-  document.getElementById('grid-inner').style.height = gridH()+'px';
-}
-
-function drawGrid(){
-  const w=gridW(), h=gridH(), cw=colWidth();
-  ctx.clearRect(0,0,w,h);
-
-  // Row backgrounds
-  for(let r=0;r<NUM_ROWS;r++){
-    const midi=rowToMidi(r);
-    const y=r*NOTE_HEIGHT;
-    ctx.fillStyle = isBlack(midi) ? '#0e0e18' : '#12121e';
-    ctx.fillRect(0,y,w,NOTE_HEIGHT);
-    // C notes marker
-    if(midi%12===0){
-      ctx.fillStyle='rgba(124,58,237,.06)';
-      ctx.fillRect(0,y,w,NOTE_HEIGHT);
-    }
-    // row border
-    ctx.fillStyle='rgba(255,255,255,.04)';
-    ctx.fillRect(0,y+NOTE_HEIGHT-1,w,1);
-  }
-
-  // Beat lines
-  for(let c=0;c<=totalCols();c++){
-    const x=c*cw;
-    const isBar   = c%16===0;
-    const isBeat  = c%4===0;
-    ctx.fillStyle = isBar ? 'rgba(255,255,255,.18)' : isBeat ? 'rgba(255,255,255,.08)' : 'rgba(255,255,255,.03)';
-    ctx.fillRect(x,0,isBar?2:1,h);
-
-    // bar number
-    if(isBar){
-      ctx.fillStyle='rgba(100,116,139,.7)';
-      ctx.font='10px Space Mono, monospace';
-      ctx.fillText('Bar '+(c/16+1), x+4, 11);
-    }
-  }
-
-  // Notes
-  notes.forEach(n => {
-    const x = n.col * cw;
-    const y = n.row * NOTE_HEIGHT;
-    const nw= n.len * cw - 2;
-    const nh= NOTE_HEIGHT - 2;
-    const inst = INSTRUMENTS[n.inst || 0];
-    const col  = inst.color;
-
-    // shadow
-    ctx.shadowColor=col; ctx.shadowBlur=8;
-    ctx.fillStyle=col+'cc';
-    ctx.beginPath();
-    ctx.roundRect(x+1,y+1,nw,nh,3);
-    ctx.fill();
-    ctx.shadowBlur=0;
-
-    // label
-    if(nw > 18){
-      ctx.fillStyle='rgba(255,255,255,.9)';
-      ctx.font='bold 9px Space Mono, monospace';
-      ctx.fillText(noteLabel(rowToMidi(n.row)),x+4,y+NOTE_HEIGHT-8);
-    }
-  });
-}
-
-// ── PIANO KEYS ────────────────────────────────────────────
-function buildPianoKeys(){
-  const wrap = document.getElementById('piano-keys');
-  wrap.innerHTML='';
-  for(let midi=MIDI_TOP; midi>=MIDI_BOT; midi--){
-    const div = document.createElement('div');
-    div.className = 'key ' + (isBlack(midi)?'black':'white');
-    if(midi%12===0) div.classList.add('key-c');
-    div.dataset.midi = midi;
-    div.textContent  = midi%12===0 ? noteLabel(midi) : (isBlack(midi)?'':'');
-    div.style.height = NOTE_HEIGHT+'px';
-    div.addEventListener('mousedown', ()=>previewNote(midi));
-    wrap.appendChild(div);
-  }
-  // Sync scroll
-  document.getElementById('grid-scroll').addEventListener('scroll', e=>{
-    wrap.scrollTop = e.target.scrollTop;
-  });
-  wrap.style.overflowY='hidden';
-  wrap.style.height=(document.getElementById('roll-wrap').offsetHeight)+'px';
-}
-
-function previewNote(midi){
-  if(AC.state==='suspended') AC.resume();
-  const inst = INSTRUMENTS[currentInst];
-  inst.synth(noteFreq(midi), AC.currentTime, 0.3, 0.7);
-  // flash key
-  const key = document.querySelector(`.key[data-midi="${midi}"]`);
-  if(key){ key.classList.add('playing'); setTimeout(()=>key.classList.remove('playing'),200); }
-}
-
-// ── GRID INTERACTION ──────────────────────────────────────
-let drawing = false, drawStart = null, drawNote = null, erasing = false;
-
-canvas.addEventListener('mousedown', e=>{
-  if(AC.state==='suspended') AC.resume();
-  const {col, row} = posFromEvent(e);
-  const existing = noteAt(col, row);
-  if(existing){
-    erasing=true; removeNote(existing); drawGrid(); return;
-  }
-  drawing=true;
-  drawStart={col,row};
-  drawNote={row, col, len:1, inst:currentInst};
-  notes.push(drawNote);
-  previewNote(rowToMidi(row));
-  drawGrid();
+// ── HTML ──────────────────────────────────────────────
+M.push({
+  id:'h1', lang:'html', diff:1, file:'index.html', time:120,
+  title:'Tag-urile sunt sparte',
+  story:'Serverul orasului nu mai afiseaza titlul. 50.000 de oameni nu vad informatiile.',
+  obj:'Repara tag-urile h1 sa apara titlul corect.',
+  bugs:['<h1Titlul.../h1> - lipsesc < si > in jurul tag-urilor'],
+  hint:'Tag-urile HTML au forma <tag>continut</tag>. Verifica simbolurile < si > de la h1.',
+  broken:[
+    '<!DOCTYPE html>',
+    '<html>',
+    '<head><title>Sistem Civic</title></head>',
+    '<body>',
+    '  <h1Titlul nu mai apare!/h1>',
+    '  <p>Sistemul civic al orasului</p>',
+    '</body>',
+    '</html>'
+  ].join('\n'),
+  fixed:[
+    '<!DOCTYPE html>',
+    '<html>',
+    '<head><title>Sistem Civic</title></head>',
+    '<body>',
+    '  <h1>Titlul nu mai apare!</h1>',
+    '  <p>Sistemul civic al orasului</p>',
+    '</body>',
+    '</html>'
+  ].join('\n'),
+  check: function(c){ return c.indexOf('<h1>') !== -1 && c.indexOf('</h1>') !== -1; },
+  why:[
+    {q:'De ce browserul nu afiseaza nimic?', a:'Browserul parseaza HTML ca un arbore. Daca gaseste <h1Titlul, nu recunoaste ca tag valid si il ignora sau il trateaza ca text.'},
+    {q:'De ce tag-urile au < si >?', a:'Tim Berners-Lee a ales < > in 1991 pentru ca nu apareau in textul documentelor. Sintaxa a ramas neschimbata 30+ ani.'}
+  ]
 });
 
-canvas.addEventListener('mousemove', e=>{
-  if(!drawing) return;
-  const {col} = posFromEvent(e);
-  const newLen = Math.max(1, col - drawStart.col + 1);
-  if(newLen !== drawNote.len){ drawNote.len = newLen; drawGrid(); }
+M.push({
+  id:'h2', lang:'html', diff:1, file:'nav.html', time:130,
+  title:'Link-urile sunt moarte',
+  story:'Reteaua interna: toate link-urile nu functioneaza. Sistemul de navigare e compromis.',
+  obj:'Repara cele 3 link-uri sa aiba href-uri corecte.',
+  bugs:['href="" - lipseste URL-ul', 'hreff typo pe al doilea', 'ghileaua lipsa pe al treilea'],
+  hint:'Fiecare <a> are nevoie de href="URL". Cauta: URL-uri lipsa, typo "hreff", ghilimele nedeschise.',
+  broken:[
+    '<!DOCTYPE html>',
+    '<html><body>',
+    '  <h2>Navigare</h2>',
+    '  <a href="">Google</a><br>',
+    '  <a hreff="https://github.com">GitHub</a><br>',
+    '  <a href="https://youtube.com target="_blank">YouTube</a>',
+    '</body></html>'
+  ].join('\n'),
+  fixed:[
+    '<!DOCTYPE html>',
+    '<html><body>',
+    '  <h2>Navigare</h2>',
+    '  <a href="https://google.com">Google</a><br>',
+    '  <a href="https://github.com">GitHub</a><br>',
+    '  <a href="https://youtube.com" target="_blank">YouTube</a>',
+    '</body></html>'
+  ].join('\n'),
+  check: function(c){ return c.indexOf('href="https://google.com"') !== -1 && c.indexOf('href="https://github.com"') !== -1 && c.indexOf('href="https://youtube.com"') !== -1; },
+  why:[
+    {q:'De ce href si nu src?', a:'href = hypertext reference - unde navighezi. src = source - resursa pe care o incarci. Tag-ul <a> foloseste href. Tag-ul <img> foloseste src. Nu sunt interschimbabile.'},
+    {q:'Ce face target="_blank"?', a:'Deschide link-ul intr-un tab nou. Fara el, pagina curenta e inlocuita cu cea din link.'}
+  ]
 });
 
-canvas.addEventListener('mouseup', ()=>{ drawing=false; erasing=false; drawNote=null; });
-canvas.addEventListener('mouseleave',()=>{ drawing=false; });
+M.push({
+  id:'h3', lang:'html', diff:2, file:'login.html', time:150,
+  title:'Formularul nu trimite date',
+  story:'Sistemul de securitate: nimeni nu poate face login. Formularul e stricat.',
+  obj:'Repara type-urile: text, password, submit.',
+  bugs:['type="txtt" typo', 'type="pasword" typo', 'type="sbumit" typo'],
+  hint:'Sunt 3 typo-uri in atributele type="". Valorile corecte: text, password, submit.',
+  broken:[
+    '<!DOCTYPE html>',
+    '<html>',
+    '<head><title>Login</title>',
+    '<style>body{font-family:sans-serif;padding:2rem;max-width:400px}',
+    'input{display:block;width:100%;padding:8px;margin:8px 0;border:1px solid #ccc;border-radius:4px}',
+    'button{padding:10px 20px;background:#4f46e5;color:white;border:none;border-radius:4px;cursor:pointer;width:100%}',
+    '</style></head>',
+    '<body>',
+    '  <h2>Login Sistem</h2>',
+    '  <form>',
+    '    <label>Username</label>',
+    '    <input type="txtt" name="username" placeholder="admin">',
+    '    <label>Parola</label>',
+    '    <input type="pasword" name="password">',
+    '    <button type="sbumit">Autentifica-te</button>',
+    '  </form>',
+    '</body></html>'
+  ].join('\n'),
+  fixed:[
+    '<!DOCTYPE html>',
+    '<html>',
+    '<head><title>Login</title>',
+    '<style>body{font-family:sans-serif;padding:2rem;max-width:400px}',
+    'input{display:block;width:100%;padding:8px;margin:8px 0;border:1px solid #ccc;border-radius:4px}',
+    'button{padding:10px 20px;background:#4f46e5;color:white;border:none;border-radius:4px;cursor:pointer;width:100%}',
+    '</style></head>',
+    '<body>',
+    '  <h2>Login Sistem</h2>',
+    '  <form>',
+    '    <label>Username</label>',
+    '    <input type="text" name="username" placeholder="admin">',
+    '    <label>Parola</label>',
+    '    <input type="password" name="password">',
+    '    <button type="submit">Autentifica-te</button>',
+    '  </form>',
+    '</body></html>'
+  ].join('\n'),
+  check: function(c){ return c.indexOf('type="text"') !== -1 && c.indexOf('type="password"') !== -1 && c.indexOf('type="submit"') !== -1; },
+  why:[
+    {q:'De ce type="password" ascunde textul?', a:'Browserul stie ca e un camp sensibil si afiseaza puncte in loc de caractere. E un comportament standard - zero CSS sau JS necesar.'},
+    {q:'De ce type="submit" si nu type="button"?', a:'type="submit" trimite automat formularul. type="button" nu face nimic implicit - trebuie onclick manual.'}
+  ]
+});
 
-function posFromEvent(e){
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  return {
-    col: Math.floor(x / colWidth()),
-    row: Math.floor(y / NOTE_HEIGHT),
-  };
-}
-function noteAt(col, row){
-  return notes.find(n => n.row===row && col>=n.col && col<n.col+n.len);
-}
-function removeNote(n){ notes = notes.filter(x=>x!==n); }
+// ── CSS ──────────────────────────────────────────────
+M.push({
+  id:'c1', lang:'css', diff:1, file:'style.html', time:120,
+  title:'CSS-ul e in locul gresit',
+  story:'Interfata sistemului: pagina exista dar nu are stiluri. Totul arata ca text brut.',
+  obj:'Muta blocul style din body in head.',
+  bugs:['<style> e in <body> in loc de <head>'],
+  hint:'Blocul <style>...</style> trebuie sa fie in <head>, nu in <body>. Taie-l si lipeste-l inainte de </head>.',
+  broken:[
+    '<!DOCTYPE html>',
+    '<html>',
+    '<head>',
+    '  <title>Interface</title>',
+    '</head>',
+    '<body>',
+    '  <h1>Panou de Control</h1>',
+    '  <p class="info">Sistem operational</p>',
+    '  <style>',
+    '    body { background: #0a0a14; color: #e2e8f0; font-family: sans-serif; padding: 2rem; }',
+    '    h1 { color: #6ee7b7; font-size: 2rem; }',
+    '    .info { color: #94a3b8; }',
+    '  </style>',
+    '</body>',
+    '</html>'
+  ].join('\n'),
+  fixed:[
+    '<!DOCTYPE html>',
+    '<html>',
+    '<head>',
+    '  <title>Interface</title>',
+    '  <style>',
+    '    body { background: #0a0a14; color: #e2e8f0; font-family: sans-serif; padding: 2rem; }',
+    '    h1 { color: #6ee7b7; font-size: 2rem; }',
+    '    .info { color: #94a3b8; }',
+    '  </style>',
+    '</head>',
+    '<body>',
+    '  <h1>Panou de Control</h1>',
+    '  <p class="info">Sistem operational</p>',
+    '</body>',
+    '</html>'
+  ].join('\n'),
+  check: function(c){ var hm = c.match(/<head>([\s\S]*?)<\/head>/i); return hm && hm[1].indexOf('<style>') !== -1; },
+  why:[
+    {q:'De ce CSS trebuie in <head>?', a:'Browserul citeste HTML de sus in jos. Daca <style> e in body, pagina se afiseaza FARA stiluri o fractiune de secunda, apoi reapare stilizata - Flash of Unstyled Content. Arat urât.'},
+    {q:'Functioneaza in body?', a:'Tehnic da in browsere moderne, dar e invalid HTML5. Cauzeaza re-render si unele optimizari de performanta nu se aplica.'}
+  ]
+});
 
-// ══════════════════════════════════════════════════════════
-//  PLAYBACK ENGINE
-// ══════════════════════════════════════════════════════════
-let playing       = false;
-let playStartAC   = 0;   // AC time when playback started
-let currentCol    = 0;
-let scheduleAhead = 0.1; // seconds to look ahead
-let animFrame     = null;
-let scheduledUntil= 0;
+M.push({
+  id:'c2', lang:'css', diff:2, file:'layout.html', time:150,
+  title:'Layout-ul e stricat',
+  story:'Panoul central: cele 3 module nu mai stau pe un rand. Totul e stivuit vertical.',
+  obj:'Schimba display:block in display:flex pe .panel.',
+  bugs:['display: block in loc de display: flex pe containerul .panel'],
+  hint:'Proprietatea display a lui .panel e "block". Schimb-o in "flex" si elementele se aliniaza orizontal.',
+  broken:[
+    '<!DOCTYPE html>',
+    '<html>',
+    '<head><title>Panel</title>',
+    '<style>',
+    'body { background: #0a0a14; padding: 2rem; font-family: sans-serif; }',
+    '.panel { display: block; gap: 1rem; }',
+    '.module { background: #1e1e35; padding: 1.5rem; border-radius: 8px;',
+    '  border: 1px solid #333; color: #e2e8f0; flex: 1; margin-bottom: 1rem; }',
+    '.module h3 { color: #6ee7b7; margin-bottom: .5rem; }',
+    '.module p { color: #64748b; font-size: .9rem; }',
+    '</style></head>',
+    '<body>',
+    '<div class="panel">',
+    '  <div class="module"><h3>Alpha</h3><p>Online 99.9%</p></div>',
+    '  <div class="module"><h3>Beta</h3><p>Online 98.1%</p></div>',
+    '  <div class="module"><h3>Gamma</h3><p>Warning 67%</p></div>',
+    '</div>',
+    '</body></html>'
+  ].join('\n'),
+  fixed:[
+    '<!DOCTYPE html>',
+    '<html>',
+    '<head><title>Panel</title>',
+    '<style>',
+    'body { background: #0a0a14; padding: 2rem; font-family: sans-serif; }',
+    '.panel { display: flex; gap: 1rem; }',
+    '.module { background: #1e1e35; padding: 1.5rem; border-radius: 8px;',
+    '  border: 1px solid #333; color: #e2e8f0; flex: 1; }',
+    '.module h3 { color: #6ee7b7; margin-bottom: .5rem; }',
+    '.module p { color: #64748b; font-size: .9rem; }',
+    '</style></head>',
+    '<body>',
+    '<div class="panel">',
+    '  <div class="module"><h3>Alpha</h3><p>Online 99.9%</p></div>',
+    '  <div class="module"><h3>Beta</h3><p>Online 98.1%</p></div>',
+    '  <div class="module"><h3>Gamma</h3><p>Warning 67%</p></div>',
+    '</div>',
+    '</body></html>'
+  ].join('\n'),
+  check: function(c){ return c.indexOf('display: flex') !== -1 || c.indexOf('display:flex') !== -1; },
+  why:[
+    {q:'De ce display:block pune elementele vertical?', a:'block = fiecare element ocupa tot randul si forteaza linie noua. flex = elementele stau pe acelasi rand implicit (flex-direction:row este implicit).'},
+    {q:'De ce flex:1 pe module?', a:'flex:1 = ia tot spatiul disponibil in mod egal. 3 module cu flex:1 inseamna ca fiecare ia exact 1/3 din container.'}
+  ]
+});
 
-function secPerCol(){ return (60 / bpm) / 4; } // one 16th note
+M.push({
+  id:'c3', lang:'css', diff:2, file:'vars.html', time:150,
+  title:'Culorile au disparut',
+  story:'UI sistem: variabilele CSS au fost sterse. Toate butoanele arata gri.',
+  obj:'Completeaza valorile variabilelor CSS: --primary, --danger, --success.',
+  bugs:['--primary: fara valoare', '--danger: fara valoare', '--success: fara valoare'],
+  hint:'Variabilele CSS au forma --nume: valoare; Valorile bune: #6366f1, #ef4444, #22c55e.',
+  broken:[
+    '<!DOCTYPE html>',
+    '<html><head><title>Theme</title>',
+    '<style>',
+    ':root {',
+    '  --primary: ;',
+    '  --danger: ;',
+    '  --success: ;',
+    '  --bg: #0a0a14;',
+    '  --tx: #e2e8f0;',
+    '}',
+    'body { background: var(--bg); color: var(--tx); font-family: sans-serif; padding: 2rem; }',
+    '.bp { background: var(--primary); color: white; padding: 8px 16px; border: none; border-radius: 4px; margin: 4px; cursor: pointer; }',
+    '.bd { background: var(--danger); color: white; padding: 8px 16px; border: none; border-radius: 4px; margin: 4px; cursor: pointer; }',
+    '.bs { background: var(--success); color: white; padding: 8px 16px; border: none; border-radius: 4px; margin: 4px; cursor: pointer; }',
+    '</style></head>',
+    '<body>',
+    '  <h2 style="margin-bottom:1rem">Butoane Sistem</h2>',
+    '  <button class="bp">Primary</button>',
+    '  <button class="bd">Danger</button>',
+    '  <button class="bs">Success</button>',
+    '</body></html>'
+  ].join('\n'),
+  fixed:[
+    '<!DOCTYPE html>',
+    '<html><head><title>Theme</title>',
+    '<style>',
+    ':root {',
+    '  --primary: #6366f1;',
+    '  --danger: #ef4444;',
+    '  --success: #22c55e;',
+    '  --bg: #0a0a14;',
+    '  --tx: #e2e8f0;',
+    '}',
+    'body { background: var(--bg); color: var(--tx); font-family: sans-serif; padding: 2rem; }',
+    '.bp { background: var(--primary); color: white; padding: 8px 16px; border: none; border-radius: 4px; margin: 4px; cursor: pointer; }',
+    '.bd { background: var(--danger); color: white; padding: 8px 16px; border: none; border-radius: 4px; margin: 4px; cursor: pointer; }',
+    '.bs { background: var(--success); color: white; padding: 8px 16px; border: none; border-radius: 4px; margin: 4px; cursor: pointer; }',
+    '</style></head>',
+    '<body>',
+    '  <h2 style="margin-bottom:1rem">Butoane Sistem</h2>',
+    '  <button class="bp">Primary</button>',
+    '  <button class="bd">Danger</button>',
+    '  <button class="bs">Success</button>',
+    '</body></html>'
+  ].join('\n'),
+  check: function(c){
+    return c.indexOf('--primary:') !== -1 && !c.match(/--primary:\s*;/) &&
+           c.indexOf('--danger:') !== -1  && !c.match(/--danger:\s*;/) &&
+           c.indexOf('--success:') !== -1 && !c.match(/--success:\s*;/);
+  },
+  why:[
+    {q:'De ce variabile CSS?', a:'Fara variabile, daca vrei sa schimbi culoarea principala in 50 de locuri, schimbi 50 de linii. Cu --primary:#6366f1, schimbi o linie. Temele dark/light se fac cu 10 linii.'},
+    {q:'De ce :root si nu body?', a:':root e cel mai inalt element din DOM. Variabilele definite acolo sunt accesibile in tot documentul, inclusiv in <head>.'}
+  ]
+});
 
-function togglePlay(){
-  if(AC.state==='suspended') AC.resume();
-  if(playing){ stopAll(); return; }
-  playing        = true;
-  currentCol     = 0;
-  playStartAC    = AC.currentTime + 0.05;
-  scheduledUntil = playStartAC;
-  document.getElementById('btn-play').textContent = '⏸ Pause';
-  document.getElementById('play-dot').classList.add('active');
-  document.getElementById('playhead-line').classList.add('active');
-  scheduleLoop();
-  animLoop();
-}
+// ── JS ──────────────────────────────────────────────
+M.push({
+  id:'j1', lang:'js', diff:1, file:'counter.html', time:120,
+  title:'Contorul nu creste',
+  story:'Sistemul de monitorizare: contorul afiseaza mereu 0. Butonul nu functioneaza.',
+  obj:'Repara functia increment() sa adauge 1 la count.',
+  bugs:['count + 1 calculeaza dar nu salveaza rezultatul'],
+  hint:'count + 1 nu modifica count. Trebuie count += 1 sau count++ sau count = count + 1.',
+  broken:[
+    '<!DOCTYPE html>',
+    '<html><head><title>Monitor</title>',
+    '<style>',
+    'body{font-family:sans-serif;background:#0a0a14;color:#e2e8f0;padding:2rem;text-align:center}',
+    '.num{font-size:5rem;color:#6ee7b7;margin:1rem 0}',
+    'button{padding:12px 28px;background:#6366f1;color:white;border:none;border-radius:6px;font-size:1rem;cursor:pointer;margin:4px}',
+    '</style></head>',
+    '<body>',
+    '  <h2>Contor</h2>',
+    '  <div class="num" id="disp">0</div>',
+    '  <button onclick="increment()">+ Adauga</button>',
+    '  <button onclick="reset()">Reset</button>',
+    '  <script>',
+    '    var count = 0;',
+    '    function increment() {',
+    '      count + 1;',
+    '      document.getElementById("disp").textContent = count;',
+    '    }',
+    '    function reset() {',
+    '      count = 0;',
+    '      document.getElementById("disp").textContent = count;',
+    '    }',
+    '  </scr' + 'ipt>',
+    '</body></html>'
+  ].join('\n'),
+  fixed:[
+    '<!DOCTYPE html>',
+    '<html><head><title>Monitor</title>',
+    '<style>',
+    'body{font-family:sans-serif;background:#0a0a14;color:#e2e8f0;padding:2rem;text-align:center}',
+    '.num{font-size:5rem;color:#6ee7b7;margin:1rem 0}',
+    'button{padding:12px 28px;background:#6366f1;color:white;border:none;border-radius:6px;font-size:1rem;cursor:pointer;margin:4px}',
+    '</style></head>',
+    '<body>',
+    '  <h2>Contor</h2>',
+    '  <div class="num" id="disp">0</div>',
+    '  <button onclick="increment()">+ Adauga</button>',
+    '  <button onclick="reset()">Reset</button>',
+    '  <script>',
+    '    var count = 0;',
+    '    function increment() {',
+    '      count += 1;',
+    '      document.getElementById("disp").textContent = count;',
+    '    }',
+    '    function reset() {',
+    '      count = 0;',
+    '      document.getElementById("disp").textContent = count;',
+    '    }',
+    '  </scr' + 'ipt>',
+    '</body></html>'
+  ].join('\n'),
+  check: function(c){ return c.indexOf('count += 1') !== -1 || c.indexOf('count++') !== -1 || c.indexOf('count = count + 1') !== -1; },
+  why:[
+    {q:'De ce count + 1 nu functioneaza?', a:'"count + 1" calculeaza valoarea dar nu o stocheaza. E ca si cum spui 3+1 fara sa faci nimic cu 4. Trebuie count = count + 1 sau scurtatura count += 1.'},
+    {q:'Care e diferenta intre += si = + ?', a:'count += 1 e echivalent cu count = count + 1. count++ e si mai scurt - incrementeaza cu exact 1. Toate trei fac acelasi lucru.'}
+  ]
+});
 
-function stopAll(){
-  playing = false;
-  currentCol = 0;
-  document.getElementById('btn-play').textContent = '▶ Play';
-  document.getElementById('play-dot').classList.remove('active');
-  document.getElementById('playhead-line').classList.remove('active');
-  document.getElementById('beat-display').textContent = '1.1';
-  document.getElementById('playhead-line').style.left = '0px';
-  cancelAnimationFrame(animFrame);
-}
+M.push({
+  id:'j2', lang:'js', diff:2, file:'calc.html', time:180,
+  title:'Impartire la zero',
+  story:'Sistemul financiar: calculatorul produce "Infinity" in rapoarte. Lipseste validarea la zero.',
+  obj:'Adauga verificare isNaN si verificare b === 0.',
+  bugs:['Lipsa verificare isNaN(a) || isNaN(b)', 'Lipsa verificare b === 0'],
+  hint:'Adauga 2 if-uri: unul cu isNaN(a) || isNaN(b) si unul cu b === 0. In ambele, afiseaza eroarea si return.',
+  broken:[
+    '<!DOCTYPE html>',
+    '<html><head><title>Calc</title>',
+    '<style>body{font-family:sans-serif;background:#f8fafc;padding:2rem;max-width:360px}',
+    'input{padding:8px;border:1px solid #e2e8f0;border-radius:4px;width:100px}',
+    '#rez{font-size:1.5rem;font-weight:700;color:#6366f1;margin-top:1rem}',
+    '#err{color:#ef4444;font-size:.85rem;min-height:1.2rem}</style></head>',
+    '<body>',
+    '  <h2>Divizor</h2>',
+    '  <input type="number" id="a" placeholder="Numar"> :',
+    '  <input type="number" id="b" placeholder="Divizor">',
+    '  <br><br>',
+    '  <button onclick="divide()" style="padding:8px 16px;background:#6366f1;color:white;border:none;border-radius:4px;cursor:pointer">Calculeaza</button>',
+    '  <div id="err"></div>',
+    '  <div id="rez"></div>',
+    '  <script>',
+    '    function divide() {',
+    '      var a = parseFloat(document.getElementById("a").value);',
+    '      var b = parseFloat(document.getElementById("b").value);',
+    '      document.getElementById("rez").textContent = "Rezultat: " + (a / b);',
+    '    }',
+    '  </scr' + 'ipt>',
+    '</body></html>'
+  ].join('\n'),
+  fixed:[
+    '<!DOCTYPE html>',
+    '<html><head><title>Calc</title>',
+    '<style>body{font-family:sans-serif;background:#f8fafc;padding:2rem;max-width:360px}',
+    'input{padding:8px;border:1px solid #e2e8f0;border-radius:4px;width:100px}',
+    '#rez{font-size:1.5rem;font-weight:700;color:#6366f1;margin-top:1rem}',
+    '#err{color:#ef4444;font-size:.85rem;min-height:1.2rem}</style></head>',
+    '<body>',
+    '  <h2>Divizor</h2>',
+    '  <input type="number" id="a" placeholder="Numar"> :',
+    '  <input type="number" id="b" placeholder="Divizor">',
+    '  <br><br>',
+    '  <button onclick="divide()" style="padding:8px 16px;background:#6366f1;color:white;border:none;border-radius:4px;cursor:pointer">Calculeaza</button>',
+    '  <div id="err"></div>',
+    '  <div id="rez"></div>',
+    '  <script>',
+    '    function divide() {',
+    '      var a = parseFloat(document.getElementById("a").value);',
+    '      var b = parseFloat(document.getElementById("b").value);',
+    '      document.getElementById("err").textContent = "";',
+    '      if (isNaN(a) || isNaN(b)) {',
+    '        document.getElementById("err").textContent = "Introdu numere valide!";',
+    '        return;',
+    '      }',
+    '      if (b === 0) {',
+    '        document.getElementById("err").textContent = "Nu se imparte la zero!";',
+    '        return;',
+    '      }',
+    '      document.getElementById("rez").textContent = "Rezultat: " + (a / b);',
+    '    }',
+    '  </scr' + 'ipt>',
+    '</body></html>'
+  ].join('\n'),
+  check: function(c){ return c.indexOf('isNaN') !== -1 && (c.indexOf('b === 0') !== -1 || c.indexOf('b == 0') !== -1); },
+  why:[
+    {q:'De ce a / 0 da Infinity si nu eroare?', a:'JavaScript urmeaza standardul IEEE 754. x/0 = Infinity e valid matematic in float. Python da ZeroDivisionError. Fiecare limbaj alege diferit.'},
+    {q:'De ce isNaN si nu typeof?', a:'typeof "abc" === "string" dar parseFloat("abc") da NaN. Trebuie verificat NaN dupa parseFloat. isNaN(NaN) = true. NaN === NaN = false - NaN nu e egal nici cu sine.'}
+  ]
+});
 
-function scheduleLoop(){
-  if(!playing) return;
-  const lookAhead = AC.currentTime + scheduleAhead;
-  while(scheduledUntil < lookAhead){
-    const col  = Math.round((scheduledUntil - playStartAC) / secPerCol()) % totalCols();
-    const when = scheduledUntil;
+M.push({
+  id:'j3', lang:'js', diff:3, file:'tasks.html', time:200,
+  title:'Lista nu se salveaza',
+  story:'Task manager: lista se sterge la fiecare refresh. localStorage nu e folosit corect.',
+  obj:'Repara save cu JSON.stringify si load cu JSON.parse.',
+  bugs:['save(): tasks fara JSON.stringify - stocheaza [object Object]', 'load(): fara JSON.parse - e string nu array'],
+  hint:'localStorage stocheaza doar strings. Foloseste JSON.stringify(tasks) la save si JSON.parse(raw) la load.',
+  broken:[
+    '<!DOCTYPE html>',
+    '<html><head><title>Tasks</title>',
+    '<style>*{box-sizing:border-box}body{font-family:sans-serif;background:#f0f4f8;padding:2rem;max-width:400px}',
+    '.app{background:white;padding:1.5rem;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.1)}',
+    'input{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:4px;margin-bottom:8px}',
+    'button.add{width:100%;padding:9px;background:#6366f1;color:white;border:none;border-radius:4px;cursor:pointer}',
+    'li{padding:6px 0;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between}',
+    'button.del{background:none;border:none;color:#ef4444;cursor:pointer}</style></head>',
+    '<body><div class="app">',
+    '  <h2>Tasks</h2>',
+    '  <input id="inp" placeholder="Adauga task...">',
+    '  <button class="add" onclick="add()">+ Adauga</button>',
+    '  <ul id="list"></ul>',
+    '</div><script>',
+    '  var tasks = [];',
+    '  function save() { localStorage.setItem("tasks", tasks); }',
+    '  function load() {',
+    '    tasks = localStorage.getItem("tasks");',
+    '    if (!tasks) tasks = [];',
+    '    render();',
+    '  }',
+    '  function add() {',
+    '    var t = document.getElementById("inp").value.trim();',
+    '    if (!t) return;',
+    '    tasks.push(t); save(); render();',
+    '    document.getElementById("inp").value = "";',
+    '  }',
+    '  function remove(i) { tasks.splice(i,1); save(); render(); }',
+    '  function render() {',
+    '    var ul = document.getElementById("list"); ul.innerHTML = "";',
+    '    for (var i=0; i<tasks.length; i++) {',
+    '      var li = document.createElement("li");',
+    '      li.innerHTML = tasks[i] + " <button class=\\"del\\" onclick=\\"remove("+i+")\\">\u2715</button>";',
+    '      ul.appendChild(li);',
+    '    }',
+    '  }',
+    '  load();',
+    '</scr' + 'ipt></body></html>'
+  ].join('\n'),
+  fixed:[
+    '<!DOCTYPE html>',
+    '<html><head><title>Tasks</title>',
+    '<style>*{box-sizing:border-box}body{font-family:sans-serif;background:#f0f4f8;padding:2rem;max-width:400px}',
+    '.app{background:white;padding:1.5rem;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.1)}',
+    'input{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:4px;margin-bottom:8px}',
+    'button.add{width:100%;padding:9px;background:#6366f1;color:white;border:none;border-radius:4px;cursor:pointer}',
+    'li{padding:6px 0;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between}',
+    'button.del{background:none;border:none;color:#ef4444;cursor:pointer}</style></head>',
+    '<body><div class="app">',
+    '  <h2>Tasks</h2>',
+    '  <input id="inp" placeholder="Adauga task...">',
+    '  <button class="add" onclick="add()">+ Adauga</button>',
+    '  <ul id="list"></ul>',
+    '</div><script>',
+    '  var tasks = [];',
+    '  function save() { localStorage.setItem("tasks", JSON.stringify(tasks)); }',
+    '  function load() {',
+    '    var raw = localStorage.getItem("tasks");',
+    '    tasks = raw ? JSON.parse(raw) : [];',
+    '    render();',
+    '  }',
+    '  function add() {',
+    '    var t = document.getElementById("inp").value.trim();',
+    '    if (!t) return;',
+    '    tasks.push(t); save(); render();',
+    '    document.getElementById("inp").value = "";',
+    '  }',
+    '  function remove(i) { tasks.splice(i,1); save(); render(); }',
+    '  function render() {',
+    '    var ul = document.getElementById("list"); ul.innerHTML = "";',
+    '    for (var i=0; i<tasks.length; i++) {',
+    '      var li = document.createElement("li");',
+    '      li.innerHTML = tasks[i] + " <button class=\\"del\\" onclick=\\"remove("+i+")\\">\u2715</button>";',
+    '      ul.appendChild(li);',
+    '    }',
+    '  }',
+    '  load();',
+    '</scr' + 'ipt></body></html>'
+  ].join('\n'),
+  check: function(c){ return c.indexOf('JSON.stringify') !== -1 && c.indexOf('JSON.parse') !== -1; },
+  why:[
+    {q:'De ce localStorage.setItem("tasks", tasks) nu functioneaza?', a:'localStorage converteste automat la string. Array [1,2,3] devine "1,2,3" sau "[object Object]". JSON.stringify([1,2,3]) produce un string valid din care poti recrea array-ul.'},
+    {q:'De ce JSON.parse la load?', a:'getItem returneaza string. Tu ai nevoie de array. JSON.parse transforma string-ul inapoi in array. Fara parse, tasks.push() esueaza - nu poti push pe un string.'}
+  ]
+});
 
-    // Melody notes — pasăm col pentru humanization
-    notes.filter(n => n.col === col).forEach(n => {
-      const inst  = INSTRUMENTS[n.inst || 0];
-      const hwhen = humanWhen(when, col);
-      const hgain = humanGain(0.75);
-      inst.synth(noteFreq(rowToMidi(n.row)), hwhen, n.len * secPerCol() * 0.92, hgain, col);
-    });
+// ── PYTHON ──────────────────────────────────────────────
+M.push({
+  id:'p1', lang:'py', diff:1, file:'report.py', time:120,
+  title:'Scriptul nu afiseaza nimic',
+  story:'Departament raportare: scriptul nu produce niciun output. Managerii sunt furiosi.',
+  obj:'Repara sintaxa print() - adauga parantezele si ghileaua lipsa.',
+  bugs:['print "..." fara paranteze (Python 2)', 'f-string: ghileaua de inchidere lipsa'],
+  hint:'Python 3 necesita paranteze: print("text"). Verifica si f-string-ul de uptime - ghileaua de inchidere lipseste.',
+  broken:[
+    'nome = "Sector Alpha"',
+    'uptime = 99.7',
+    'incidente = 3',
+    '',
+    'print "Raport: " + nome',
+    'print(f"Uptime: {uptime}%)',
+    'print(f"Incidente: {incidente}")',
+    'print("Status: OK")'
+  ].join('\n'),
+  fixed:[
+    'nome = "Sector Alpha"',
+    'uptime = 99.7',
+    'incidente = 3',
+    '',
+    'print("Raport: " + nome)',
+    'print(f"Uptime: {uptime}%")',
+    'print(f"Incidente: {incidente}")',
+    'print("Status: OK")'
+  ].join('\n'),
+  check: function(c){ return c.indexOf('print("Raport') !== -1 && c.indexOf('print(f"Uptime: {uptime}%")') !== -1; },
+  why:[
+    {q:'De ce print fara paranteze era valid?', a:'Python 2 (pre-2010): print era keyword, nu functie. Python 3 l-a transformat in functie - necesita paranteze. E una din cele mai comune erori la migrare.'},
+    {q:'De ce f-string?', a:'f"Uptime: {uptime}%" e mai scurt si lizibil decat "Uptime: " + str(uptime) + "%". Python evalueaza {uptime} la runtime si insereaza valoarea.'}
+  ]
+});
 
-    // Rhythm — kick declanșează bass pulse vizualizator
-    const step = col % STEPS;
-    DRUMS.forEach((d, di) => {
-      if(rhythmPattern[di][step]){
-        const vol = rhythmVol[di];
-        // Humanize ușor și drumurile
-        const dJitter = humanize.active ? (Math.random()*2-1)*0.008 : 0;
-        const dVol    = humanize.active ? vol*(0.85+Math.random()*0.3) : vol;
-        d.fn(when + dJitter, dVol);
-        if(di === 0) triggerBassPulse(dVol); // kick
-      }
-    });
+M.push({
+  id:'p2', lang:'py', diff:2, file:'filter.py', time:150,
+  title:'Filtrul e gresit',
+  story:'Sistemul de analiza: functia filtrare returneaza gresit. Evenimentul cu prio=8 e exclus dar nu ar trebui.',
+  obj:'Schimba > in >= in conditia de filtrare.',
+  bugs:['if item["prio"] > prag trebuie >= prag'],
+  hint:'Functia filtreaza cu > (strict mai mare). Dar vrem >= 8. Evenimentul cu prio exact 8 trebuie inclus.',
+  broken:[
+    'def filtrare(date, prag):',
+    '    rezultat = []',
+    '    for item in date:',
+    '        if item["prio"] > prag:',
+    '            rezultat.append(item)',
+    '    return rezultat',
+    '',
+    'evenimente = [',
+    '    {"nume": "CPU spike", "prio": 9},',
+    '    {"nume": "Disk low", "prio": 6},',
+    '    {"nume": "Memory leak", "prio": 10},',
+    '    {"nume": "DB error", "prio": 8},',
+    ']',
+    '',
+    'critice = filtrare(evenimente, 8)',
+    'print(f"Critice: {len(critice)}")',
+    'for e in critice:',
+    '    print(f"  [{e[\'prio\']}] {e[\'nume\']}")'
+  ].join('\n'),
+  fixed:[
+    'def filtrare(date, prag):',
+    '    rezultat = []',
+    '    for item in date:',
+    '        if item["prio"] >= prag:',
+    '            rezultat.append(item)',
+    '    return rezultat',
+    '',
+    'evenimente = [',
+    '    {"nume": "CPU spike", "prio": 9},',
+    '    {"nume": "Disk low", "prio": 6},',
+    '    {"nume": "Memory leak", "prio": 10},',
+    '    {"nume": "DB error", "prio": 8},',
+    ']',
+    '',
+    'critice = filtrare(evenimente, 8)',
+    'print(f"Critice: {len(critice)}")',
+    'for e in critice:',
+    '    print(f"  [{e[\'prio\']}] {e[\'nume\']}")'
+  ].join('\n'),
+  check: function(c){ return c.indexOf('>= prag') !== -1; },
+  why:[
+    {q:'De ce > si >= sunt diferite?', a:'> (strict): 8 > 8 = False. >= (mai mare sau egal): 8 >= 8 = True. Un singur caracter face diferenta intre a include sau exclude un element.'},
+    {q:'De ce dict["cheie"] si nu dict.cheie?', a:'Python dict-urile folosesc [] pentru acces. Dot notation functioneaza pe obiecte/clase, nu pe dict-uri. JavaScript permite ambele - Python nu.'}
+  ]
+});
 
-    scheduledUntil += secPerCol();
-  }
-  setTimeout(scheduleLoop, 25);
-}
+M.push({
+  id:'p3', lang:'py', diff:3, file:'sort.py', time:200,
+  title:'Swap-ul nu functioneaza',
+  story:'Algoritmul de sortare nu sorteaza nimic. Swap-ul e scris gresit - schimba elementul cu sine.',
+  obj:'Repara linia din swap: arr[j] = arr[j] trebuie arr[j] = arr[j+1].',
+  bugs:['arr[j] = arr[j] - swap-ul nu face nimic, elementul e copiat cu sine'],
+  hint:'Swap-ul are 3 linii: temp = arr[j], arr[j] = arr[j+1], arr[j+1] = temp. Linia din mijloc e gresita.',
+  broken:[
+    'def bubble_sort(arr):',
+    '    n = len(arr)',
+    '    for i in range(n):',
+    '        for j in range(0, n-i-1):',
+    '            if arr[j] > arr[j+1]:',
+    '                temp = arr[j]',
+    '                arr[j] = arr[j]',
+    '                arr[j+1] = temp',
+    '    return arr',
+    '',
+    'scoruri = [64, 34, 25, 12, 22, 11, 90]',
+    'print("Initial:", scoruri)',
+    'sortat = bubble_sort(scoruri[:])',
+    'print("Sortat: ", sortat)'
+  ].join('\n'),
+  fixed:[
+    'def bubble_sort(arr):',
+    '    n = len(arr)',
+    '    for i in range(n):',
+    '        for j in range(0, n-i-1):',
+    '            if arr[j] > arr[j+1]:',
+    '                temp = arr[j]',
+    '                arr[j] = arr[j+1]',
+    '                arr[j+1] = temp',
+    '    return arr',
+    '',
+    'scoruri = [64, 34, 25, 12, 22, 11, 90]',
+    'print("Initial:", scoruri)',
+    'sortat = bubble_sort(scoruri[:])',
+    'print("Sortat: ", sortat)'
+  ].join('\n'),
+  check: function(c){ return c.indexOf('arr[j] = arr[j+1]') !== -1; },
+  why:[
+    {q:'De ce avem nevoie de temp?', a:'Daca faci arr[j] = arr[j+1] direct, pierzi valoarea originala a arr[j] inainte sa o salvezi. temp o salveaza. Python permite swap elegant: arr[j], arr[j+1] = arr[j+1], arr[j] - fara temp.'},
+    {q:'De ce scoruri[:] si nu direct scoruri?', a:'Lista in Python e mutabila. bubble_sort modifica lista IN-PLACE. scoruri[:] creeaza o copie - array original ramane nemodificat.'}
+  ]
+});
 
-function animLoop(){
-  if(!playing){ cancelAnimationFrame(animFrame); return; }
-  const elapsed = AC.currentTime - playStartAC;
-  const col = (elapsed / secPerCol()) % totalCols();
-  const x   = col * colWidth();
+// ── C++ ──────────────────────────────────────────────
+M.push({
+  id:'cpp1', lang:'cpp', diff:2, file:'main.cpp', time:150,
+  title:'Compilatorul refuza codul',
+  story:'Echipa C++: codul de inventar nu compileaza. Productia e blocata.',
+  obj:'Adauga ; lipsiti si #include <string>.',
+  bugs:['using namespace std fara ;', 'pret = 29.99 fara ;', '#include <string> lipsa', 'cout linie 1 fara ;'],
+  hint:'C++ necesita ; dupa fiecare instructiune. Numara cate lipsesc. Plus: string necesita #include <string>.',
+  broken:[
+    '#include <iostream>',
+    'using namespace std',
+    '',
+    'int main() {',
+    '    int stoc = 150;',
+    '    double pret = 29.99',
+    '    string produs = "Widget Alpha";',
+    '',
+    '    cout << "Produs: " << produs << endl',
+    '    cout << "Stoc: " << stoc << endl;',
+    '    cout << "Valoare: " << stoc * pret << " RON" << endl;',
+    '',
+    '    return 0;',
+    '}'
+  ].join('\n'),
+  fixed:[
+    '#include <iostream>',
+    '#include <string>',
+    'using namespace std;',
+    '',
+    'int main() {',
+    '    int stoc = 150;',
+    '    double pret = 29.99;',
+    '    string produs = "Widget Alpha";',
+    '',
+    '    cout << "Produs: " << produs << endl;',
+    '    cout << "Stoc: " << stoc << endl;',
+    '    cout << "Valoare: " << stoc * pret << " RON" << endl;',
+    '',
+    '    return 0;',
+    '}'
+  ].join('\n'),
+  check: function(c){
+    return c.indexOf('using namespace std;') !== -1 &&
+           c.indexOf('29.99;') !== -1 &&
+           c.indexOf('#include <string>') !== -1 &&
+           (c.match(/endl;/g)||[]).length >= 3;
+  },
+  why:[
+    {q:'De ce ; dupa fiecare linie in C++ si nu in Python?', a:'Python foloseste newline-ul ca separator. C++ ignora spatiile si newline-urile - compilatorul citeste tot ca un sir continuu. ; ii spune unde se termina o instructiune.'},
+    {q:'De ce #include <string> separat?', a:'string nu e un tip primitiv - e o clasa din Standard Library. iostream include operatii I/O dar nu si clasa string. In C++ trebuie inclus explicit tot ce folosesti.'}
+  ]
+});
 
-  // Move playhead
-  const line = document.getElementById('playhead-line');
-  line.style.left = x + 'px';
+M.push({
+  id:'cpp2', lang:'cpp', diff:3, file:'factorial.cpp', time:180,
+  title:'Recursivitatea nu se opreste',
+  story:'Serverul de calcul: functia de factorial intra in stack overflow. A doborat serverul de 3 ori.',
+  obj:'Adauga cazul de baza: if (n <= 1) return 1; la inceputul functiei.',
+  bugs:['Lipsa base case - recursivitate infinita pana la stack overflow'],
+  hint:'Orice functie recursiva TREBUIE sa aiba un caz de oprire. Adauga la inceput: if (n <= 1) return 1;',
+  broken:[
+    '#include <iostream>',
+    'using namespace std;',
+    '',
+    'int factorial(int n) {',
+    '    return n * factorial(n - 1);',
+    '}',
+    '',
+    'int main() {',
+    '    cout << "5! = " << factorial(5) << endl;',
+    '    cout << "0! = " << factorial(0) << endl;',
+    '    return 0;',
+    '}'
+  ].join('\n'),
+  fixed:[
+    '#include <iostream>',
+    'using namespace std;',
+    '',
+    'int factorial(int n) {',
+    '    if (n <= 1) return 1;',
+    '    return n * factorial(n - 1);',
+    '}',
+    '',
+    'int main() {',
+    '    cout << "5! = " << factorial(5) << endl;',
+    '    cout << "0! = " << factorial(0) << endl;',
+    '    return 0;',
+    '}'
+  ].join('\n'),
+  check: function(c){ return (c.indexOf('if (n <= 1)') !== -1 || c.indexOf('if(n<=1)') !== -1 || c.indexOf('if (n == 0)') !== -1) && c.indexOf('return 1') !== -1; },
+  why:[
+    {q:'De ce fara base case intri in stack overflow?', a:'factorial(5) -> factorial(4) -> ... -> factorial(-inf). Fiecare apel adauga un frame pe call stack. Stack-ul are dimensiune fixa (~1MB). Cand se umple: CRASH.'},
+    {q:'De ce n <= 1 si nu n == 0?', a:'factorial(0) = 1 prin definitie matematica. factorial(1) = 1. Daca pui doar n == 0, factorial(-1) intra in recursivitate infinita. n <= 1 prinde si cazuri negative.'}
+  ]
+});
 
-  // Auto-scroll
-  const scroll = document.getElementById('grid-scroll');
-  const visible = scroll.clientWidth;
-  if(x > scroll.scrollLeft + visible - 80) scroll.scrollLeft = x - 60;
-  if(x < scroll.scrollLeft) scroll.scrollLeft = Math.max(0, x - 60);
-
-  // Beat display
-  const bar  = Math.floor(col/16)+1;
-  const beat = Math.floor((col%16)/4)+1;
-  document.getElementById('beat-display').textContent = bar+'.'+beat;
-
-  // Highlight rhythm step
-  const step = Math.floor(col) % STEPS;
-  document.querySelectorAll('.step-btn').forEach(b=>b.classList.remove('current'));
-  document.querySelectorAll(`.step-btn[data-step="${step}"]`).forEach(b=>b.classList.add('current'));
-
-  animFrame = requestAnimationFrame(animLoop);
-}
-
-// ══════════════════════════════════════════════════════════
-//  CONTROLS
-// ══════════════════════════════════════════════════════════
-function setBPM(v){ bpm=+v; document.getElementById('bpm-display').textContent=v; }
-
-function setBars(v){
-  bars=+v; resizeCanvas(); drawGrid();
-  if(playing){ stopAll(); }
-}
-
-function shiftOctave(delta){
-  baseOctave = Math.max(1, Math.min(7, baseOctave+delta));
-  document.getElementById('oct-display').textContent = baseOctave;
-  // scroll to octave
-  const midi = baseOctave * 12 + 12;
-  const row  = midiToRow(midi);
-  const y    = row * NOTE_HEIGHT;
-  document.getElementById('grid-scroll').scrollTop = y - 80;
-}
-
-function clearAll(){ notes=[]; drawGrid(); }
-
-// ── INSTRUMENT BUTTONS ────────────────────────────────────
-function buildInstPanel(){
-  const list = document.getElementById('inst-list');
-  list.innerHTML='';
-  INSTRUMENTS.forEach((inst,i)=>{
-    const btn=document.createElement('button');
-    btn.className='inst-btn'+(i===0?' active':'');
-    btn.innerHTML=`<span class="inst-dot" style="background:${inst.color}"></span>${inst.name}`;
-    btn.onclick=()=>{
-      currentInst=i;
-      document.querySelectorAll('.inst-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-    };
-    list.appendChild(btn);
-  });
-}
-
-// ── RHYTHM ROWS ───────────────────────────────────────────
-function buildRhythmPanel(){
-  const wrap = document.getElementById('rhythm-rows');
-  wrap.innerHTML='';
-  DRUMS.forEach((d, di)=>{
-    const row = document.createElement('div');
-    row.className='rhythm-row';
-    row.innerHTML=`<span class="rhythm-label" style="color:${d.color}">${d.name}</span>`;
-    const steps = document.createElement('div');
-    steps.className='rhythm-steps';
-    for(let s=0;s<STEPS;s++){
-      const btn=document.createElement('button');
-      btn.className='step-btn'+(s%4===0&&s>0?' beat4':'');
-      btn.dataset.drum=di; btn.dataset.step=s;
-      btn.style.background= rhythmPattern[di][s] ? d.color+'99' : '';
-      btn.style.borderColor= rhythmPattern[di][s] ? d.color : '';
-      btn.onclick=()=>{
-        rhythmPattern[di][s]=!rhythmPattern[di][s];
-        btn.style.background= rhythmPattern[di][s] ? d.color+'99' : '';
-        btn.style.borderColor= rhythmPattern[di][s] ? d.color : '';
-        btn.classList.toggle('on', rhythmPattern[di][s]);
-        if(rhythmPattern[di][s] && AC.state!=='suspended') d.fn(AC.currentTime+0.01, rhythmVol[di]);
-      };
-      steps.appendChild(btn);
-    }
-    // vol slider per drum
-    const vol=document.createElement('input');
-    vol.type='range'; vol.min=0; vol.max=100; vol.value=80;
-    vol.className='rhythm-vol';
-    vol.title='Volume '+d.name;
-    vol.oninput=()=>{ rhythmVol[di]=vol.value/100; };
-    row.appendChild(steps);
-    row.appendChild(vol);
-    wrap.appendChild(row);
-  });
-}
-
-// ══════════════════════════════════════════════════════════
-//  v4: BASS PULSE VISUALIZER
-// ══════════════════════════════════════════════════════════
-let bassPulseAmt  = 0;
-let bassPulseDecay= 0.88;
-
-function triggerBassPulse(vol=1){
-  bassPulseAmt = Math.min(1, bassPulseAmt + vol * 0.9);
-}
-
-function initBassPulse(){
-  const cvs = document.getElementById('bass-pulse');
-  function resize(){
-    cvs.width  = cvs.parentElement.offsetWidth;
-    cvs.height = cvs.parentElement.offsetHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  const ctx2 = cvs.getContext('2d');
-
-  function drawPulse(){
-    const w = cvs.width, h = cvs.height;
-    ctx2.clearRect(0,0,w,h);
-
-    if(bassPulseAmt > 0.01){
-      const r = Math.max(w,h) * 0.85 * bassPulseAmt;
-      const cx=w/2, cy=h/2;
-
-      // Inel exterior
-      const grd=ctx2.createRadialGradient(cx,cy,r*0.3,cx,cy,r);
-      grd.addColorStop(0, `rgba(124,58,237,${bassPulseAmt*0.18})`);
-      grd.addColorStop(0.5,`rgba(219,39,119,${bassPulseAmt*0.10})`);
-      grd.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx2.fillStyle=grd;
-      ctx2.beginPath();
-      ctx2.arc(cx,cy,r,0,Math.PI*2);
-      ctx2.fill();
-
-      // Inel de contur
-      ctx2.strokeStyle=`rgba(192,132,252,${bassPulseAmt*0.35})`;
-      ctx2.lineWidth=2*bassPulseAmt;
-      ctx2.beginPath();
-      ctx2.arc(cx,cy,r*0.55,0,Math.PI*2);
-      ctx2.stroke();
-
-      bassPulseAmt *= bassPulseDecay;
-    }
-    requestAnimationFrame(drawPulse);
-  }
-  drawPulse();
-}
-
-// ══════════════════════════════════════════════════════════
-//  MELODY GENERATOR  (v4 — cu Hijaz + density variation)
-// ══════════════════════════════════════════════════════════
-
-const SCALES = {
-  major:      [0,2,4,5,7,9,11],
-  minor:      [0,2,3,5,7,8,10],
-  pentatonic: [0,2,4,7,9],
-  blues:      [0,3,5,6,7,10],
-  dorian:     [0,2,3,5,7,9,10],
-  phrygian:   [0,1,3,5,7,8,10],
-  lydian:     [0,2,4,6,7,9,11],
-  mixolydian: [0,2,4,5,7,9,10],
-  hijaz:      [0,1,4,5,7,8,10],   // v4: scală arabă autentică
-  phryDom:    [0,1,4,5,7,8,11],   // v4: phrygian dominant (manele clasice)
+// =====================================================
+//  STATE
+// =====================================================
+var G = {
+  score: 0,
+  lives: 3,
+  done: [],
+  cur: null,
+  timer: null,
+  timeLeft: 0,
+  hints: 0
 };
 
-// Rhythm patterns: arrays of [col_offset, duration] in 16th notes
-const RHYTHM_PATTERNS = {
-  melodic:  [[0,4],[4,2],[6,2],[8,4],[12,2],[14,2]],
-  arpeggio: [[0,1],[2,1],[4,1],[6,1],[8,1],[10,1],[12,1],[14,1]],
-  stepwise: [[0,2],[2,2],[4,2],[6,2],[8,2],[10,2],[12,2],[14,2]],
-  sparse:   [[0,4],[6,2],[12,4]],
-  dense:    [[0,1],[1,1],[2,1],[3,1],[4,2],[6,1],[7,1],[8,2],[10,1],[11,1],[12,2],[14,1],[15,1]],
-};
-
-function rnd(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-function rndInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
-function rndFloat(min,max){ return Math.random()*(max-min)+min; }
-function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
-
-function getScaleNotes(rootNote, scaleName, octaveMin=3, octaveMax=5){
-  const intervals = SCALES[scaleName] || SCALES.minor;
-  const notes = [];
-  for(let oct=octaveMin; oct<=octaveMax; oct++){
-    intervals.forEach(interval=>{
-      const midi = oct*12 + rootNote + interval;
-      if(midi >= MIDI_BOT && midi <= MIDI_TOP) notes.push(midi);
-    });
-  }
-  return notes;
+function loadG() {
+  try {
+    var d = localStorage.getItem('cq3_done');
+    if (d) G.done = JSON.parse(d);
+    var s = localStorage.getItem('cq3_score');
+    if (s) G.score = parseInt(s);
+    var l = localStorage.getItem('cq3_lives');
+    if (l) G.lives = parseInt(l);
+    if (G.lives < 1) G.lives = 3;
+  } catch(e) {}
 }
-
-function generateMelody(){
-  const scaleName = document.getElementById('scale-select').value;
-  const rootNote  = parseInt(document.getElementById('root-select').value);
-  const style     = document.getElementById('style-select').value;
-
-  // Clear only melody notes (keep rhythm)
-  notes = [];
-
-  const scaleNotes = getScaleNotes(rootNote, scaleName, 3, 5);
-
-  // v4: DENSITY VARIATION — 20% șansă să schimbe densitatea radical
-  let activePat = rhythmPat;
-  const densityRoll = Math.random();
-  if(densityRoll < 0.10){
-    // Ultra sparse — doar 2-3 note per bar
-    activePat = [[0,6],[8,4]];
-    showGenToast('✦ Sparse mode — breathing room');
-  } else if(densityRoll < 0.20){
-    // Asalt — note pe fiecare 16th
-    activePat = Array.from({length:16},(_,i)=>[i,1]);
-    showGenToast('✦ Dense mode — full assault');
-  }
-  const rhythmPat  = RHYTHM_PATTERNS[style];
-  const totalSixteenths = totalCols();
-
-  // Choose a tonal center — start on root, tend to return
-  const rootMidis = scaleNotes.filter(m => m % 12 === rootNote);
-  let lastMidi    = rnd(rootMidis) || scaleNotes[Math.floor(scaleNotes.length/2)];
-
-  // Generate phrase by phrase (one bar = 16 sixteenths)
-  for(let bar=0; bar<bars; bar++){
-    const barOffset = bar * 16;
-
-    // Pick rhythm for this bar — vary per bar for interest
-    const pat = bar % 2 === 0 ? activePat : addRhythmVariation(activePat, style);
-
-    // Decide if this bar is a "tension" bar or "resolve" bar
-    const isResolve = bar === bars-1 || (bar>0 && Math.random()<0.3);
-
-    pat.forEach(([colOff, len]) => {
-      const absCol = barOffset + colOff;
-      if(absCol + len > totalSixteenths) return;
-
-      let midi;
-      if(isResolve && colOff===0){
-        // Start resolve bar on root
-        midi = rnd(rootMidis) || lastMidi;
-      } else {
-        midi = pickNextNote(lastMidi, scaleNotes, style, colOff, isResolve, rootNote);
-      }
-
-      midi = clamp(midi, MIDI_BOT, MIDI_TOP);
-      notes.push({ row: midiToRow(midi), col: absCol, len, inst: currentInst });
-      lastMidi = midi;
-    });
-  }
-
-  drawGrid();
-
-  // Show toast
-  const scaleName2 = document.getElementById('scale-select').value;
-  const rootNames  = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  const rootDisp   = rootNames[parseInt(document.getElementById('root-select').value)];
-  const style2     = document.getElementById('style-select').value;
-  showGenToast(`✦ ${rootDisp} ${scaleName2} — ${style2}`);
-
-  // Scroll to where notes are
-  if(notes.length){
-    const midRow = notes[Math.floor(notes.length/2)].row;
-    const y = midRow * NOTE_HEIGHT;
-    document.getElementById('grid-scroll').scrollTop = y - 120;
-    document.getElementById('grid-scroll').scrollLeft = 0;
-  }
+function saveG() {
+  try {
+    localStorage.setItem('cq3_done', JSON.stringify(G.done));
+    localStorage.setItem('cq3_score', G.score);
+    localStorage.setItem('cq3_lives', G.lives);
+  } catch(e) {}
 }
+function isDone(id) { return G.done.indexOf(id) !== -1; }
+function markDone(id) { if (!isDone(id)) { G.done.push(id); saveG(); } }
 
-function pickNextNote(lastMidi, scaleNotes, style, colOff, isResolve, rootNote){
-  // Build weighted candidates based on style
-  const idx    = scaleNotes.indexOf(lastMidi);
-  const len    = scaleNotes.length;
-  let candidates = [];
-
-  if(style === 'arpeggio'){
-    // Arpeggios: prefer jumps of 3rd/5th
-    candidates = scaleNotes.filter(m => {
-      const d = Math.abs(m - lastMidi);
-      return d === 3 || d === 4 || d === 7 || d === 12;
-    });
-  } else if(style === 'stepwise'){
-    // Stepwise: prefer half/whole steps
-    candidates = scaleNotes.filter(m => {
-      const d = Math.abs(m - lastMidi);
-      return d <= 3;
-    });
-  } else if(style === 'dense'){
-    // Dense: chromatic-ish, small steps
-    candidates = scaleNotes.filter(m => Math.abs(m-lastMidi) <= 4);
-  } else if(style === 'sparse'){
-    // Sparse: larger leaps allowed
-    candidates = scaleNotes.filter(m => {
-      const d = Math.abs(m - lastMidi);
-      return d >= 3 && d <= 12;
-    });
-  } else {
-    // Melodic: mix — prefer steps but allow leaps
-    const stepCands  = scaleNotes.filter(m => Math.abs(m-lastMidi) <= 4);
-    const leapCands  = scaleNotes.filter(m => { const d=Math.abs(m-lastMidi); return d>=5&&d<=9; });
-    // Weight stepwise 3x more likely
-    candidates = [...stepCands,...stepCands,...stepCands,...leapCands];
-  }
-
-  // Add gravity: pull toward middle of scale
-  const midMidi = scaleNotes[Math.floor(len/2)];
-  if(lastMidi > midMidi + 12) candidates = candidates.filter(m => m <= lastMidi);
-  if(lastMidi < midMidi - 12) candidates = candidates.filter(m => m >= lastMidi);
-
-  // If resolve, bias toward root notes
-  if(isResolve){
-    const rootCands = candidates.filter(m => m%12===rootNote);
-    if(rootCands.length) candidates = [...candidates, ...rootCands, ...rootCands];
-  }
-
-  if(!candidates.length) candidates = scaleNotes;
-  return rnd(candidates);
-}
-
-function addRhythmVariation(pat, style){
-  // Slightly modify rhythm for variety
-  return pat.map(([col, len]) => {
-    const jitter = Math.random() < 0.25 ? 1 : 0;
-    const lenVar = Math.random() < 0.2 ? Math.max(1, len + rndInt(-1,1)) : len;
-    return [col, lenVar];
-  }).filter(([c,l]) => l > 0);
-}
-
-// ── RHYTHM GENERATOR ─────────────────────────────────────
-
-const RHYTHM_PRESETS = {
-  // [drumIndex, stepIndex][]
-  house:    { 0:[0,8], 1:[4,12], 2:[0,2,4,6,8,10,12,14], 3:[], 4:[4,12], 5:[] },
-  trap:     { 0:[0,10], 1:[4,12], 2:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15], 3:[], 4:[4,8,12], 5:[8] },
-  hiphop:   { 0:[0,6,10], 1:[4,12], 2:[2,6,10,14], 3:[], 4:[4,12], 5:[10] },
-  rock:     { 0:[0,8], 1:[4,12], 2:[0,4,8,12], 3:[6,14], 4:[], 5:[2,10] },
-  bossa:    { 0:[0,3,6,10,12], 1:[], 2:[0,2,4,6,8,10,12,14], 3:[], 4:[2,6,10,14], 5:[] },
-  random:   null,
-};
-
-function generateRhythm(){
-  const genreKeys = Object.keys(RHYTHM_PRESETS);
-  const pick      = rnd(genreKeys);
-  const preset    = RHYTHM_PRESETS[pick];
-
-  // Reset rhythm
-  rhythmPattern = DRUMS.map(() => new Array(STEPS).fill(false));
-
-  if(preset === null){
-    // Pure random
-    DRUMS.forEach((d, di)=>{
-      const density = rndFloat(0.2, 0.55);
-      for(let s=0;s<STEPS;s++) rhythmPattern[di][s] = Math.random() < density;
-    });
-  } else {
-    Object.entries(preset).forEach(([di, steps])=>{
-      steps.forEach(s => { rhythmPattern[parseInt(di)][s] = true; });
-    });
-    // Add small random fills
-    DRUMS.forEach((d,di)=>{
-      if(Math.random()<0.3){
-        const s = rndInt(0,15);
-        rhythmPattern[di][s]=true;
-      }
-    });
-  }
-
-  // Rebuild rhythm panel UI
-  buildRhythmPanel();
-
-  // Flash feedback
-  showGenToast(`Rhythm: ${pick.toUpperCase()}`);
-}
-
-function showGenToast(msg){
-  let t = document.getElementById('gen-toast');
-  if(!t){
-    t = document.createElement('div');
-    t.id = 'gen-toast';
-    t.style.cssText='position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-20px);background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;padding:.6rem 1.6rem;border-radius:40px;font-size:.85rem;font-family:Syne,sans-serif;font-weight:700;z-index:999;pointer-events:none;opacity:0;transition:all .3s;';
-    document.body.appendChild(t);
-  }
-  t.textContent = msg;
-  t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)';
-  clearTimeout(t._timeout);
-  t._timeout = setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(-20px)'; },1800);
-}
-
-// Override generateMelody to show toast too
-const _origGen = generateMelody;
-// wrap inline below
-
-// ══════════════════════════════════════════════════════════
-//  GENRE ENGINE
-// ══════════════════════════════════════════════════════════
-
-const GENRES = [
-  {
-    id:'trap', name:'Trap', emoji:'🔫', bpmRange:[130,145],
-    scale:'minor', root:9, style:'sparse', inst:8,   // v4: 808 Sub
-    desc:'130–145 BPM',
-    humanize:{ active:false, swing:0, velRand:0.1, timingMs:5 },
-    portamento:{ active:false }, use808:true,
-    rhythm:{
-      0:[0,8], 1:[4,12],
-      2:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
-      3:[], 4:[], 5:[6,14],
-    },
-    octMin:2, octMax:3,
-  },
-  {
-    id:'hiphop', name:'Hip-Hop', emoji:'🎤', bpmRange:[85,95],
-    scale:'minor', root:2, style:'melodic', inst:0,
-    desc:'85–95 BPM',
-    humanize:{ active:true, swing:0.06, velRand:0.28, timingMs:9 }, // v4: swing
-    portamento:{ active:false }, use808:false,
-    rhythm:{
-      0:[0,6,10], 1:[4,12], 2:[2,6,10,14], 3:[], 4:[4,12], 5:[10],
-    },
-    octMin:3, octMax:5,
-  },
-  {
-    id:'manele', name:'Manele', emoji:'🎹', bpmRange:[140,160],
-    scale:'hijaz', root:4, style:'dense', inst:9,    // v4: Klapa + Hijaz
-    desc:'140–160 BPM',
-    humanize:{ active:false, swing:0, velRand:0.12, timingMs:4 },
-    portamento:{ active:true, time:0.10 }, use808:false, // v4: portamento ON
-    rhythm:{
-      0:[0,3,6,9,12], 1:[4,12],
-      2:[0,2,4,6,8,10,12,14], 3:[1,5,9,13], 4:[2,10], 5:[6],
-    },
-    octMin:3, octMax:5,
-  },
-  {
-    id:'house', name:'House', emoji:'🏠', bpmRange:[124,128],
-    scale:'minor', root:7, style:'arpeggio', inst:3,
-    desc:'124–128 BPM',
-    humanize:{ active:false, swing:0, velRand:0.08, timingMs:3 },
-    portamento:{ active:false }, use808:false,
-    rhythm:{
-      0:[0,4,8,12], 1:[4,12], 2:[2,6,10,14], 3:[6,14], 4:[4,12], 5:[],
-    },
-    octMin:3, octMax:5,
-  },
-  {
-    id:'lofi', name:'Lo-Fi', emoji:'🌙', bpmRange:[70,85],
-    scale:'dorian', root:2, style:'sparse', inst:1,
-    desc:'70–85 BPM',
-    humanize:{ active:true, swing:0.05, velRand:0.22, timingMs:12 },
-    portamento:{ active:false }, use808:false,
-    rhythm:{
-      0:[0,10], 1:[4,12], 2:[0,4,8,12], 3:[], 4:[], 5:[],
-    },
-    octMin:4, octMax:5,
-  },
-  {
-    id:'drill', name:'Drill', emoji:'⚡', bpmRange:[140,150],
-    scale:'minor', root:5, style:'sparse', inst:8,   // v4: 808
-    desc:'140–150 BPM',
-    humanize:{ active:false, swing:0, velRand:0.06, timingMs:3 },
-    portamento:{ active:false }, use808:true,
-    rhythm:{
-      0:[0,10,12], 1:[4,12],
-      2:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
-      3:[], 4:[8], 5:[6,14],
-    },
-    octMin:2, octMax:3,
-  },
-  {
-    id:'reggaeton', name:'Reggaeton', emoji:'🌴', bpmRange:[95,100],
-    scale:'minor', root:7, style:'melodic', inst:4,
-    desc:'95–100 BPM',
-    humanize:{ active:false, swing:0, velRand:0.1, timingMs:5 },
-    portamento:{ active:false }, use808:false,
-    rhythm:{
-      0:[0,8], 1:[3,8,11], 2:[0,2,4,6,8,10,12,14], 3:[], 4:[3,11], 5:[8],
-    },
-    octMin:3, octMax:5,
-  },
-  {
-    id:'rock', name:'Rock', emoji:'🎸', bpmRange:[120,140],
-    scale:'pentatonic', root:4, style:'stepwise', inst:2,
-    desc:'120–140 BPM',
-    humanize:{ active:false, swing:0, velRand:0.15, timingMs:6 },
-    portamento:{ active:false }, use808:false,
-    rhythm:{
-      0:[0,8], 1:[4,12], 2:[0,4,8,12], 3:[6,14], 4:[], 5:[2,10],
-    },
-    octMin:3, octMax:5,
-  },
-  {
-    id:'jazz', name:'Jazz', emoji:'🎷', bpmRange:[120,160],
-    scale:'dorian', root:9, style:'melodic', inst:1,
-    desc:'120–160 BPM',
-    rhythm:{           // Swing feel
-      0:[0,6,10],
-      1:[6,14],
-      2:[0,2,6,8,10,14],
-      3:[4,12],
-      4:[],
-      5:[],
-    },
-    octMin:4, octMax:5,
-  },
-  {
-    id:'edm', name:'EDM', emoji:'🔊', bpmRange:[135,150],
-    scale:'minor', root:0, style:'arpeggio', inst:3,
-    desc:'135–150 BPM',
-    rhythm:{
-      0:[0,4,8,12],
-      1:[4,12],
-      2:[0,2,4,6,8,10,12,14],
-      3:[6,14],
-      4:[0,8],
-      5:[],
-    },
-    octMin:3, octMax:5,
-  },
-  {
-    id:'bossanova', name:'Bossa Nova', emoji:'🎺', bpmRange:[110,130],
-    scale:'major', root:7, style:'melodic', inst:6,
-    desc:'110–130 BPM',
-    rhythm:{
-      0:[0,3,7,10,12],
-      1:[],
-      2:[0,2,4,6,8,10,12,14],
-      3:[],
-      4:[2,6,10,14],
-      5:[],
-    },
-    octMin:4, octMax:5,
-  },
-  {
-    id:'ambient', name:'Ambient', emoji:'🌌', bpmRange:[60,80],
-    scale:'lydian', root:0, style:'sparse', inst:3,
-    desc:'60–80 BPM',
-    rhythm:{
-      0:[0],
-      1:[],
-      2:[0,8],
-      3:[4,12],
-      4:[],
-      5:[],
-    },
-    octMin:4, octMax:6,
-  },
+// =====================================================
+//  BOOT
+// =====================================================
+var bootLines = [
+  {t:'dim', s:'BIOS v4.2 ... OK'},
+  {t:'dim', s:'Memorie 16384 MB ... OK'},
+  {t:'',    s:'Retea ... conectat'},
+  {t:'warn',s:'ATENTIE: 14 sisteme au cod corupt'},
+  {t:'err', s:'EROARE: Sectoarele HTML/CSS/JS/PY/CPP sunt compromise'},
+  {t:'',    s:'Modul CodeQuest ... incarcat'},
+  {t:'warn',s:'ALERTA: Ai fost ales. Repara sistemele.'}
 ];
 
-let activeGenre = null;
+window.onload = function() {
+  loadG();
+  var i = 0;
+  var log = document.getElementById('boot-log');
+  function next() {
+    if (i >= bootLines.length) {
+      setTimeout(function() {
+        document.getElementById('boot-btn').style.display = 'block';
+      }, 300);
+      return;
+    }
+    var bl = bootLines[i++];
+    var d = document.createElement('div');
+    d.className = 'bl ' + bl.t;
+    d.textContent = '> ' + bl.s;
+    log.appendChild(d);
+    setTimeout(next, 160 + Math.random() * 100);
+  }
+  next();
+};
 
-function buildGenrePanel(){
-  const grid = document.getElementById('genre-grid');
+// =====================================================
+//  SCREENS
+// =====================================================
+function show(id) {
+  var all = ['boot','map','game'];
+  for (var i=0; i<all.length; i++) {
+    var el = document.getElementById(all[i]);
+    if (all[i] === id) { el.classList.add('on'); }
+    else { el.classList.remove('on'); }
+  }
+}
+
+function goMap() {
+  stopTimer();
+  buildMap();
+  show('map');
+}
+
+// =====================================================
+//  MAP
+// =====================================================
+function buildMap() {
+  renderHearts(document.getElementById('map-hearts'), G.lives, 'ht');
+  document.getElementById('map-score').textContent = G.score;
+  document.getElementById('map-prog').textContent = G.done.length + '/' + M.length;
+
+  var grid = document.getElementById('map-grid');
   grid.innerHTML = '';
-  GENRES.forEach(g => {
-    const btn = document.createElement('button');
-    btn.className = 'genre-btn';
-    btn.id = 'genre-' + g.id;
-    btn.innerHTML = `<span class="g-emoji">${g.emoji}</span>${g.name}<span class="g-bpm">${g.desc}</span>`;
-    btn.onclick = () => applyGenre(g.id);
-    grid.appendChild(btn);
-  });
-}
 
-function applyGenre(id){
-  const g = GENRES.find(x => x.id === id);
-  if(!g) return;
+  for (var i=0; i<M.length; i++) {
+    var m = M[i];
+    var done = isDone(m.id);
+    var locked = i > 0 && !isDone(M[i-1].id);
+    var isNext = !done && !locked;
 
-  activeGenre = g;
+    var c = document.createElement('div');
+    c.className = 'card' + (done?' done':'') + (locked?' locked':'') + (isNext?' next':'');
 
-  // v4: Aplică humanization, portamento, 808 din config gen
-  humanize    = { ...{ active:false,swing:0,velRand:0,timingMs:0 }, ...(g.humanize||{}) };
-  portamento  = { ...{ active:false,time:0.08,lastFreq:0 },         ...(g.portamento||{}), lastFreq:0 };
-  use808      = g.use808 || false;
-  last808Freq = 0;
+    var dots = '';
+    for (var d=0; d<3; d++) { dots += '<div class="dd' + (d < m.diff ? ' on' : '') + '"></div>'; }
 
-  // Highlight buton activ
-  document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('genre-'+id).classList.add('active');
+    c.innerHTML = '<div class="c-lang ' + m.lang + '">' + m.lang.toUpperCase() + '</div>' +
+      '<div class="c-title">' + (done ? '&#10003; ' : '') + m.title + '</div>' +
+      '<div class="c-sub">' + m.story.substring(0, 55) + '...</div>' +
+      '<div class="diff-dots">' + dots + '</div>' +
+      (done ? '<span class="c-done-badge">REPARAT</span>' : '');
 
-  // Setează BPM random în range
-  const newBpm = rndInt(g.bpmRange[0], g.bpmRange[1]);
-  bpm = newBpm;
-  document.getElementById('bpm-slider').value = newBpm;
-  document.getElementById('bpm-display').textContent = newBpm;
-
-  // Setează scală + tonică + stil în select-uri
-  document.getElementById('scale-select').value = g.scale;
-  document.getElementById('root-select').value  = g.root;
-  document.getElementById('style-select').value = g.style;
-
-  // Setează instrument
-  currentInst = g.inst;
-  document.querySelectorAll('.inst-btn').forEach((b,i) => b.classList.toggle('active', i===g.inst));
-
-  // Aplică rhythm pattern specific genului
-  rhythmPattern = DRUMS.map(() => new Array(STEPS).fill(false));
-  Object.entries(g.rhythm).forEach(([di, steps]) => {
-    steps.forEach(s => { rhythmPattern[parseInt(di)][s] = true; });
-  });
-  // Mici variații random pentru naturalețe
-  DRUMS.forEach((d,di) => {
-    if(Math.random() < 0.2){
-      const s = rndInt(0,15);
-      rhythmPattern[di][s] = !rhythmPattern[di][s];
+    if (!locked) {
+      (function(mission){ c.onclick = function(){ startMission(mission); }; })(m);
     }
+    grid.appendChild(c);
+  }
+}
+
+function renderHearts(container, count, cls) {
+  container.innerHTML = '';
+  for (var i=0; i<3; i++) {
+    var h = document.createElement('span');
+    h.className = cls + (i >= count ? ' off' : '');
+    h.textContent = '\u2665';
+    container.appendChild(h);
+  }
+}
+
+// =====================================================
+//  START MISSION
+// =====================================================
+function startMission(m) {
+  G.cur = m;
+  G.hints = 0;
+
+  document.getElementById('g-title').textContent = m.title;
+
+  var badge = document.getElementById('g-badge');
+  badge.textContent = m.lang.toUpperCase();
+  var colors = {html:'rgba(255,170,0,.2)', css:'rgba(68,136,255,.2)', js:'rgba(170,68,255,.2)', py:'rgba(0,255,136,.15)', cpp:'rgba(255,51,85,.2)'};
+  var txts   = {html:'#ffaa00', css:'#4488ff', js:'#aa44ff', py:'#00ff88', cpp:'#ff3355'};
+  badge.style.background = colors[m.lang] || '';
+  badge.style.color = txts[m.lang] || '';
+
+  document.getElementById('g-story').textContent = m.story;
+  document.getElementById('g-obj').textContent = '\u2192 ' + m.obj;
+  document.getElementById('g-fname').textContent = m.file;
+  document.getElementById('g-bugs').textContent = m.bugs.length + ' bug-uri detectate';
+
+  document.getElementById('ged').value = m.broken;
+  updateLN();
+  clearCon();
+  document.getElementById('gprev').srcdoc = '';
+  document.getElementById('gexp').innerHTML = '<div class="cempty">// apasa "De ce?" pentru explicatii</div>';
+
+  renderHearts(document.getElementById('g-hearts'), G.lives, 'g-ht');
+  document.getElementById('g-score').textContent = G.score + ' pts';
+
+  showRtab('prev', document.querySelector('.rtab'));
+  startTimer(m.time);
+  show('game');
+}
+
+// =====================================================
+//  TIMER
+// =====================================================
+function startTimer(sec) {
+  stopTimer();
+  G.timeLeft = sec;
+  renderTimer();
+  G.timer = setInterval(function() {
+    G.timeLeft--;
+    renderTimer();
+    if (G.timeLeft <= 15) document.getElementById('g-timer').classList.add('danger');
+    if (G.timeLeft <= 0) { stopTimer(); loseLife('Timp expirat!'); }
+  }, 1000);
+}
+function stopTimer() {
+  clearInterval(G.timer);
+  document.getElementById('g-timer').classList.remove('danger');
+}
+function renderTimer() {
+  var m = Math.floor(G.timeLeft/60);
+  var s = G.timeLeft % 60;
+  document.getElementById('g-timer').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+// =====================================================
+//  RUN & CHECK
+// =====================================================
+function doRun() {
+  if (!G.cur) return;
+  var code = document.getElementById('ged').value;
+  var m = G.cur;
+
+  if (m.lang === 'html' || m.lang === 'css' || m.lang === 'js') {
+    document.getElementById('gprev').srcdoc = code;
+    showRtab('prev', null);
+  }
+  if (m.lang === 'py') {
+    clearCon();
+    runPy(code);
+    showRtab('con', null);
+  }
+  if (m.lang === 'cpp') {
+    clearCon();
+    runCpp(code);
+    showRtab('con', null);
+  }
+
+  var ok = m.check(code);
+  setTimeout(function() {
+    if (ok) {
+      winMission();
+    } else {
+      flashEl('r');
+      addCon('Sistemul inca nu functioneaza. Verifica bug-urile!', 'wa');
+      toast('Bug-uri inca prezente. Continua!', 'r');
+    }
+  }, m.lang === 'py' || m.lang === 'cpp' ? 50 : 350);
+}
+
+function winMission() {
+  stopTimer();
+  var tBonus = Math.floor(G.timeLeft * 2);
+  var hPen   = G.hints * 30;
+  var base   = G.cur.diff * 100;
+  var earned = Math.max(base + tBonus - hPen, 10);
+  G.score += earned;
+  markDone(G.cur.id);
+  saveG();
+  flashEl('g');
+  showResult(true, earned, tBonus, hPen);
+}
+
+function loseLife(reason) {
+  G.lives--;
+  if (G.lives < 0) G.lives = 0;
+  saveG();
+  flashEl('r');
+  renderHearts(document.getElementById('g-hearts'), G.lives, 'g-ht');
+  if (G.lives <= 0) {
+    stopTimer();
+    showResult(false, 0, 0, 0, reason + ' Fara vieti!');
+  } else {
+    toast(reason + ' Vieti ramase: ' + G.lives, 'r');
+  }
+}
+
+// =====================================================
+//  RESULT
+// =====================================================
+function showResult(win, earned, tBonus, hPen, msg) {
+  document.getElementById('ri').textContent = win ? '\uD83C\uDF89' : '\uD83D\uDC80';
+  var rt = document.getElementById('rt');
+  rt.textContent = win ? 'Sistem reparat!' : 'Misiune esuata';
+  rt.className = 'res-title ' + (win ? 'win' : 'lose');
+  document.getElementById('rm').textContent = win
+    ? 'Ai reparat "' + G.cur.title + '". Sistemul e stabil.'
+    : (msg || 'Sistemul a ramas compromis.');
+
+  var rs = document.getElementById('rs');
+  rs.innerHTML = win
+    ? '<div class="rs"><span class="rs-v">' + earned + '</span><span class="rs-l">Puncte</span></div>' +
+      '<div class="rs"><span class="rs-v">+' + tBonus + '</span><span class="rs-l">Bonus timp</span></div>' +
+      '<div class="rs"><span class="rs-v' + (hPen ? ' red' : '') + '">' + (hPen ? '-' + hPen : '0') + '</span><span class="rs-l">Hints</span></div>'
+    : '';
+
+  var rb = document.getElementById('rb');
+  var curIdx = -1;
+  for (var i=0; i<M.length; i++) { if (M[i].id === G.cur.id) { curIdx = i; break; } }
+  var nextM = M[curIdx + 1];
+
+  rb.innerHTML = '';
+  if (win && nextM) {
+    var nb = document.createElement('button');
+    nb.className = 'rb p';
+    nb.textContent = 'Urmatoarea \u2192';
+    (function(nm){ nb.onclick = function(){ closeResult(); startMission(nm); }; })(nextM);
+    rb.appendChild(nb);
+  }
+  var sb = document.createElement('button');
+  sb.className = 'rb s';
+  sb.textContent = '\u2190 Harta';
+  sb.onclick = function(){ closeResult(); goMap(); };
+  rb.appendChild(sb);
+
+  if (!win) {
+    var rb2 = document.createElement('button');
+    rb2.className = 'rb p';
+    rb2.textContent = 'Incearca din nou';
+    (function(cm){ rb2.onclick = function(){ closeResult(); startMission(cm); }; })(G.cur);
+    rb.insertBefore(rb2, sb);
+  }
+
+  document.getElementById('res-overlay').classList.add('on');
+}
+function closeResult() { document.getElementById('res-overlay').classList.remove('on'); }
+
+// =====================================================
+//  TOOLS
+// =====================================================
+function doHint() {
+  if (!G.cur) return;
+  G.hints++;
+  var p = document.createElement('div');
+  p.className = 'hint-pop';
+  p.textContent = '\uD83D\uDCA1 ' + G.cur.hint;
+  document.body.appendChild(p);
+  setTimeout(function(){ if(p.parentNode) p.parentNode.removeChild(p); }, 4000);
+}
+
+function doShowCode() {
+  if (!G.cur) return;
+  if (confirm('Afisez codul corect? Pierzi bonus la scor.')) {
+    document.getElementById('ged').value = G.cur.fixed;
+    updateLN();
+    toast('Studiaza codul - nu copia pur si simplu!', 'r');
+  }
+}
+
+function doReset() {
+  if (!G.cur) return;
+  document.getElementById('ged').value = G.cur.broken;
+  updateLN();
+  toast('Cod resetat', 'r');
+}
+
+function doExplain() {
+  if (!G.cur) return;
+  var m = G.cur;
+  var el = document.getElementById('gexp');
+  el.innerHTML = '';
+
+  var bs = document.createElement('div');
+  bs.className = 'es';
+  bs.innerHTML = '<div class="el">Bug-uri detectate</div>';
+  for (var i=0; i<m.bugs.length; i++) {
+    var d = document.createElement('div');
+    d.style.cssText = 'color:#ff3355;font-size:.7rem;padding:2px 0;';
+    d.textContent = '\u2717 ' + m.bugs[i];
+    bs.appendChild(d);
+  }
+  el.appendChild(bs);
+
+  for (var w=0; w<m.why.length; w++) {
+    var wd = document.createElement('div');
+    wd.className = 'es';
+    wd.innerHTML = '<div class="wc"><div class="wq">\uD83D\uDD0D ' + m.why[w].q + '</div><div class="wa2">' + m.why[w].a + '</div></div>';
+    el.appendChild(wd);
+  }
+
+  var sol = document.createElement('div');
+  sol.className = 'es';
+  var pre = document.createElement('pre');
+  pre.className = 'ec';
+  pre.textContent = m.fixed;
+  sol.innerHTML = '<div class="el">Solutie completa</div>';
+  sol.appendChild(pre);
+  el.appendChild(sol);
+
+  showRtab('exp', null);
+}
+
+// =====================================================
+//  TABS
+// =====================================================
+function showRtab(name, btn) {
+  var panels = ['prev','con','exp'];
+  for (var i=0; i<panels.length; i++) {
+    document.getElementById('rp-' + panels[i]).classList.remove('on');
+  }
+  document.querySelectorAll('.rtab').forEach(function(t){ t.classList.remove('on'); });
+  document.getElementById('rp-' + name).classList.add('on');
+  document.querySelectorAll('.rtab').forEach(function(t){
+    if ((name==='prev' && t.textContent==='Preview') ||
+        (name==='con'  && t.textContent==='Console') ||
+        (name==='exp'  && t.textContent==='De ce?')) t.classList.add('on');
   });
-  buildRhythmPanel();
+}
 
-  // Generează melodia cu setările genului
-  const savedOctMin = g.octMin;
-  const savedOctMax = g.octMax;
+// =====================================================
+//  PYTHON RUNNER (subset)
+// =====================================================
+function runPy(code) {
+  var vars = {};
+  var lines = code.split('\n');
+  var i = 0;
+  while (i < lines.length) {
+    var raw = lines[i++];
+    var line = raw.trim();
+    if (!line || line.charAt(0) === '#') continue;
 
-  notes = [];
-  const scaleNotes = getScaleNotes(g.root, g.scale, savedOctMin, savedOctMax);
-  const rhythmPat  = RHYTHM_PATTERNS[g.style];
-  const totalSixteenths = totalCols();
-  const rootMidis = scaleNotes.filter(m => m%12 === g.root);
-  let lastMidi = rnd(rootMidis) || scaleNotes[Math.floor(scaleNotes.length/2)];
+    if (line.indexOf('print(') === 0) {
+      try { addCon(pyEval(line.slice(6, -1), vars), 'ok'); } catch(e) {}
+      continue;
+    }
 
-  // v4: density variation în applyGenre
-  let activePat = rhythmPat;
-  const dRoll = Math.random();
-  if(dRoll < 0.10)      activePat = [[0,6],[8,4]];
-  else if(dRoll < 0.20) activePat = Array.from({length:16},(_,i)=>[i,1]);
-
-  for(let bar=0; bar<bars; bar++){
-    const barOffset  = bar * 16;
-    const isResolve  = bar === bars-1;
-    const pat = bar%2===0 ? activePat : addRhythmVariation(activePat, g.style);
-
-    pat.forEach(([colOff, len]) => {
-      const absCol = barOffset + colOff;
-      if(absCol + len > totalSixteenths) return;
-      let midi;
-      if(isResolve && colOff===0){
-        midi = rnd(rootMidis) || lastMidi;
-      } else {
-        midi = pickNextNote(lastMidi, scaleNotes, g.style, colOff, isResolve, g.root);
+    // for i,v in enumerate(list, start):
+    var fem = line.match(/^for\s+(\w+)\s*,\s*(\w+)\s+in\s+enumerate\((\w+)(?:,\s*(\d+))?\)\s*:/);
+    if (fem) {
+      var iv = fem[1], vv = fem[2], ln = fem[3], st = parseInt(fem[4]||0);
+      var lst = vars[ln] || [];
+      var blk = getBlk(lines, i);
+      i += blk.length;
+      for (var bi=0; bi<lst.length; bi++) {
+        vars[iv] = bi+st; vars[vv] = lst[bi];
+        for (var bj=0; bj<blk.length; bj++) {
+          var bt = blk[bj].trim();
+          if (bt.indexOf('print(') === 0) { try { addCon(pyEval(bt.slice(6,-1), vars), 'ok'); } catch(e) {} }
+        }
       }
-      midi = clamp(midi, MIDI_BOT, MIDI_TOP);
-      notes.push({ row: midiToRow(midi), col: absCol, len, inst: g.inst });
-      lastMidi = midi;
+      continue;
+    }
+
+    // for v in list:
+    var frl = line.match(/^for\s+(\w+)\s+in\s+(\w+)\s*:/);
+    if (frl) {
+      var vv2 = frl[1], ln2 = frl[2];
+      var lst2 = vars[ln2] || [];
+      var blk2 = getBlk(lines, i);
+      i += blk2.length;
+      for (var bi2=0; bi2<lst2.length; bi2++) {
+        vars[vv2] = lst2[bi2];
+        for (var bj2=0; bj2<blk2.length; bj2++) {
+          var bt2 = blk2[bj2].trim();
+          if (bt2.indexOf('print(') === 0) { try { addCon(pyEval(bt2.slice(6,-1), vars), 'ok'); } catch(e) {} }
+        }
+      }
+      continue;
+    }
+
+    // assignment
+    var asgn = line.match(/^(\w+)\s*=\s*(.+)$/);
+    if (asgn) {
+      var nm = asgn[1], ex = asgn[2].trim();
+      if (ex.charAt(0) === '[') {
+        try { vars[nm] = JSON.parse(ex.replace(/'/g,'"').replace(/True/g,'true').replace(/False/g,'false')); } catch(e) { vars[nm] = []; }
+      } else if (ex.charAt(0) === '{') {
+        try {
+          var cleaned = ex.replace(/'/g,'"').replace(/True/g,'true').replace(/False/g,'false').replace(/(\w+)\s*:/g,'"$1":');
+          vars[nm] = JSON.parse(cleaned);
+        } catch(e) { vars[nm] = {}; }
+      } else {
+        try { vars[nm] = pyExpr(ex, vars); } catch(e) { vars[nm] = ex; }
+      }
+    }
+  }
+}
+
+function getBlk(lines, start) {
+  var b = [];
+  for (var j=start; j<lines.length; j++) {
+    if (lines[j].charAt(0) === ' ' || lines[j].charAt(0) === '\t') b.push(lines[j]);
+    else if (lines[j].trim() === '') continue;
+    else break;
+  }
+  return b;
+}
+
+function pyEval(inner, vars) {
+  inner = (inner||'').trim();
+  if (inner.indexOf('f"') === 0 || inner.indexOf("f'") === 0) {
+    var s = inner.slice(2, -1).replace(/\\n/g, '\n');
+    s = s.replace(/\{([^}]+)\}/g, function(_, e) {
+      try { return String(pyExpr(e, vars)); } catch(err) { return e; }
     });
+    return s;
   }
-
-  drawGrid();
-
-  if(notes.length){
-    const midRow = notes[Math.floor(notes.length/2)].row;
-    document.getElementById('grid-scroll').scrollTop = midRow*NOTE_HEIGHT - 120;
-    document.getElementById('grid-scroll').scrollLeft = 0;
+  if ((inner.charAt(0) === '"' && inner.charAt(inner.length-1) === '"') ||
+      (inner.charAt(0) === "'" && inner.charAt(inner.length-1) === "'")) {
+    return inner.slice(1,-1).replace(/\\n/g,'\n');
   }
-
-  // v4: toast cu info humanize/portamento
-  const rootNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  const extras = [
-    humanize.active ? `swing ${Math.round(humanize.swing*1000)}ms` : '',
-    portamento.active ? 'portamento' : '',
-    use808 ? '808' : '',
-  ].filter(Boolean).join(' · ');
-  showGenToast(`${g.emoji} ${g.name} — ${rootNames[g.root]} ${g.scale} @ ${newBpm} BPM${extras ? ' · '+extras : ''}`);
+  // string concat
+  if (inner.indexOf('+') !== -1 && inner.indexOf('"') !== -1) {
+    try { return String(pyExpr(inner, vars)); } catch(e) { return inner; }
+  }
+  try { return String(pyExpr(inner, vars)); } catch(e) { return inner; }
 }
 
-// ══════════════════════════════════════════════════════════
-//  🎲 RANDOM EVERYTHING
-// ══════════════════════════════════════════════════════════
-function randomEverything(){
-  // Gen random
-  const g = rnd(GENRES);
-
-  // Tonică random — ignoră tonică din gen, alege oricare
-  const randomRoot = rndInt(0, 11);
-
-  // Scală random din toate disponibile
-  const allScales  = Object.keys(SCALES);
-  const randomScale= rnd(allScales);
-
-  // BPM random în range gen ± 15
-  const randomBpm  = clamp(rndInt(g.bpmRange[0]-10, g.bpmRange[1]+10), 40, 200);
-
-  // Aplică genul (setează humanize/portamento/808/rhythm/inst)
-  // dar suprascrie tonică + scală + bpm după
-  applyGenre(g.id);
-
-  // Suprascrie cu valorile random
-  bpm = randomBpm;
-  document.getElementById('bpm-slider').value  = randomBpm;
-  document.getElementById('bpm-display').textContent = randomBpm;
-  document.getElementById('root-select').value  = randomRoot;
-  document.getElementById('scale-select').value = randomScale;
-
-  // Regenerează melodia cu noile setări (scală + tonică random)
-  notes = [];
-  const scaleNotes = getScaleNotes(randomRoot, randomScale, g.octMin, g.octMax);
-  const rhythmPat  = RHYTHM_PATTERNS[g.style];
-  const totalSixteenths = totalCols();
-  const rootMidis  = scaleNotes.filter(m => m%12 === randomRoot);
-  let lastMidi     = rnd(rootMidis) || scaleNotes[Math.floor(scaleNotes.length/2)];
-
-  let activePat = rhythmPat;
-  const dRoll = Math.random();
-  if(dRoll < 0.10)      activePat = [[0,6],[8,4]];
-  else if(dRoll < 0.20) activePat = Array.from({length:16},(_,i)=>[i,1]);
-
-  for(let bar=0; bar<bars; bar++){
-    const barOffset = bar*16;
-    const isResolve = bar===bars-1;
-    const pat = bar%2===0 ? activePat : addRhythmVariation(activePat, g.style);
-    pat.forEach(([colOff,len])=>{
-      const absCol=barOffset+colOff;
-      if(absCol+len>totalSixteenths) return;
-      let midi = isResolve&&colOff===0
-        ? (rnd(rootMidis)||lastMidi)
-        : pickNextNote(lastMidi,scaleNotes,g.style,colOff,isResolve,randomRoot);
-      midi=clamp(midi,MIDI_BOT,MIDI_TOP);
-      notes.push({row:midiToRow(midi),col:absCol,len,inst:g.inst});
-      lastMidi=midi;
-    });
+function pyExpr(expr, vars) {
+  var e = (expr||'').trim()
+    .replace(/\bTrue\b/g,'true').replace(/\bFalse\b/g,'false')
+    .replace(/\blen\((\w+)\)/g, function(_,v){ var val=vars[v]; return Array.isArray(val)?val.length:(typeof val==='string'?val.length:0); });
+  var keys = Object.keys(vars);
+  for (var i=0; i<keys.length; i++) {
+    var k = keys[i];
+    e = e.replace(new RegExp('\\b'+k+'\\b','g'), JSON.stringify(vars[k]));
   }
-  drawGrid();
-
-  if(notes.length){
-    const midRow=notes[Math.floor(notes.length/2)].row;
-    document.getElementById('grid-scroll').scrollTop=midRow*NOTE_HEIGHT-120;
-    document.getElementById('grid-scroll').scrollLeft=0;
-  }
-
-  const rootNames=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  showGenToast(`🎲 ${g.emoji} ${g.name} · ${rootNames[randomRoot]} ${randomScale} · ${randomBpm} BPM`);
-}
-function exportMIDI(){
-  const data = { bpm, bars, notes, rhythmPattern };
-  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = 'melodix_export.json';
-  a.click();
+  return Function('"use strict";return('+e+')')();
 }
 
-// keyboard shortcuts
-document.addEventListener('keydown', e=>{
-  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
-  if(e.code==='Space'){ e.preventDefault(); togglePlay(); }
-  if(e.code==='Escape') stopAll();
-  if(e.code==='Delete'||e.code==='Backspace') clearAll();
-  if(e.code==='KeyG') generateMelody();
-  if(e.code==='KeyT') generateRhythm();
-  if(e.code==='KeyR') randomEverything();  // R = Random tot
-});
-
-// ══════════════════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════════════════
-function init(){
-  resizeCanvas();
-  buildPianoKeys();
-  buildInstPanel();
-  buildGenrePanel();
-  buildRhythmPanel();
-  drawGrid();
-  initBassPulse();
-
-  // Adaugă scalele noi v4 în select
-  const scaleSelect = document.getElementById('scale-select');
-  if(!scaleSelect.querySelector('[value="hijaz"]')){
-    [['hijaz','Hijaz (Arab)'],['phryDom','Phrygian Dom.']].forEach(([v,t])=>{
-      const o=document.createElement('option'); o.value=v; o.textContent=t;
-      scaleSelect.appendChild(o);
-    });
+// =====================================================
+//  C++ RUNNER
+// =====================================================
+function runCpp(code) {
+  var vars = {};
+  var declRe = /(int|double|float)\s+(\w+)\s*=\s*([^;]+);/g;
+  var m;
+  while ((m = declRe.exec(code)) !== null) {
+    try { vars[m[2]] = Function('"use strict";return(' + m[3].trim() + ')')(); } catch(e) { vars[m[2]] = 0; }
   }
+  var strRe = /string\s+(\w+)\s*=\s*"([^"]*)"/g;
+  while ((m = strRe.exec(code)) !== null) { vars[m[1]] = m[2]; }
 
-  setTimeout(()=>{
-    const row = midiToRow(60);
-    document.getElementById('grid-scroll').scrollTop = row*NOTE_HEIGHT - 120;
-  }, 50);
-
-  window.addEventListener('resize', ()=>{
-    document.querySelector('.piano-keys').style.height = document.getElementById('roll-wrap').offsetHeight+'px';
-  });
+  var coutRe = /cout\s*<<\s*((?:"[^"]*"|[^;])+?)(?:<<\s*endl)?\s*;/g;
+  while ((m = coutRe.exec(code)) !== null) {
+    var parts = m[1].split('<<');
+    var result = '';
+    for (var pi=0; pi<parts.length; pi++) {
+      var p = parts[pi].trim();
+      if (!p || p === 'endl') continue;
+      if (p.charAt(0) === '"' && p.charAt(p.length-1) === '"') { result += p.slice(1,-1).replace(/\\n/g,'\n'); continue; }
+      var e2 = p;
+      var ks = Object.keys(vars);
+      for (var ki=0; ki<ks.length; ki++) {
+        e2 = e2.replace(new RegExp('\\b'+ks[ki]+'\\b','g'), JSON.stringify(vars[ks[ki]]));
+      }
+      e2 = e2.replace(/sqrt\(([^)]+)\)/g, function(_,n){ try{return String(Math.sqrt(Function('"use strict";return('+n+')')()));}catch(err){return n;} });
+      try { result += String(Function('"use strict";return('+e2+')')()) ; } catch(err) { result += p; }
+    }
+    if (result.trim()) addCon(result, 'ok');
+  }
 }
 
-init();
+// =====================================================
+//  CONSOLE
+// =====================================================
+function addCon(txt, type) {
+  var c = document.getElementById('gcon');
+  var em = c.querySelector('.cempty');
+  if (em) c.removeChild(em);
+  var txts = txt.split('\n');
+  for (var i=0; i<txts.length; i++) {
+    if (!txts[i].trim()) continue;
+    var d = document.createElement('div');
+    d.className = 'cl ' + (type||'ok');
+    d.textContent = (type==='er'?'\u2717 ':type==='wa'?'\u26A0 ':'> ') + txts[i];
+    c.appendChild(d);
+  }
+  c.scrollTop = c.scrollHeight;
+}
+function clearCon() {
+  document.getElementById('gcon').innerHTML = '<div class="cempty">// apasa Run &amp; Check</div>';
+}
+
+// =====================================================
+//  EDITOR
+// =====================================================
+function updateLN() {
+  var val = document.getElementById('ged').value;
+  var n = val.split('\n').length;
+  var s = '';
+  for (var i=1; i<=n; i++) s += i + '\n';
+  document.getElementById('lnums').textContent = s;
+  document.getElementById('g-lines').textContent = n + ' linii';
+}
+function edChange() { updateLN(); }
+function edKey(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    var ta = e.target, s = ta.selectionStart;
+    ta.value = ta.value.slice(0,s) + '  ' + ta.value.slice(ta.selectionEnd);
+    ta.selectionStart = ta.selectionEnd = s + 2;
+    updateLN();
+  }
+  if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); doRun(); }
+}
+
+// =====================================================
+//  FX
+// =====================================================
+function flashEl(c) {
+  var el = document.getElementById('game');
+  el.classList.remove('flash-g','flash-r');
+  void el.offsetWidth;
+  el.classList.add('flash-' + c);
+  setTimeout(function(){ el.classList.remove('flash-g','flash-r'); }, 500);
+}
+function toast(msg, c) {
+  var t = document.createElement('div');
+  t.className = 'toast-msg ' + c;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 2500);
+}
 </script>
 </body>
 </html>
